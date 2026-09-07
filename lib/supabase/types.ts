@@ -1,7 +1,8 @@
 // Hand-written to match supabase/migrations/20260904232051_init_onboarding_schema.sql,
 // supabase/migrations/20260905192540_swipe_feed_schema.sql,
-// supabase/migrations/20260906102444_profile_extras.sql, and
-// supabase/migrations/20260907090000_quiz_schema.sql.
+// supabase/migrations/20260906102444_profile_extras.sql,
+// supabase/migrations/20260907090000_quiz_schema.sql, and
+// supabase/migrations/20260907160000_quiz_sharing_schema.sql.
 // Replace with `supabase gen types typescript` output once the schema stabilizes.
 export interface Database {
   public: {
@@ -155,6 +156,38 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['quiz_questions']['Row']>;
         Relationships: [];
       };
+      shared_quizzes: {
+        Row: {
+          id: string;
+          owner_user_id: string;
+          source_quiz_session_id: string;
+          created_at: string;
+        };
+        Insert: {
+          owner_user_id: string;
+          source_quiz_session_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['shared_quizzes']['Row']>;
+        Relationships: [];
+      };
+      quiz_plays: {
+        Row: {
+          id: string;
+          shared_quiz_id: string;
+          player_user_id: string;
+          score: number;
+          total_questions: number;
+          played_at: string;
+        };
+        Insert: {
+          shared_quiz_id: string;
+          player_user_id: string;
+          score: number;
+          total_questions: number;
+        };
+        Update: Partial<Database['public']['Tables']['quiz_plays']['Row']>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -183,6 +216,12 @@ export interface Database {
           p_delta: number;
         };
         Returns: undefined;
+      };
+      get_leaderboard_display_names: {
+        Args: {
+          p_user_ids: string[];
+        };
+        Returns: { id: string; display_name: string | null }[];
       };
     };
   };

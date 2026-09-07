@@ -3,14 +3,24 @@ import { Pressable, Text, View } from 'react-native';
 import { colors, fonts } from '@/constants/theme';
 import { t } from '@/lib/localization';
 
+interface SecondaryAction {
+  label: string;
+  onPress: () => void;
+  // 'solid' for viewing a shared quiz's leaderboard, 'outline' for sharing your own quiz —
+  // matches the two distinct summary states in the reference mockups.
+  variant: 'solid' | 'outline';
+  disabled?: boolean;
+}
+
 interface QuizSummaryCardProps {
   score: number;
   totalQuestions: number;
   xpAwarded: number;
   onDone: () => void;
+  secondaryAction?: SecondaryAction;
 }
 
-export function QuizSummaryCard({ score, totalQuestions, xpAwarded, onDone }: QuizSummaryCardProps) {
+export function QuizSummaryCard({ score, totalQuestions, xpAwarded, onDone, secondaryAction }: QuizSummaryCardProps) {
   const accuracy = totalQuestions > 0 ? score / totalQuestions : 0;
   const headline =
     accuracy >= 0.8
@@ -30,6 +40,27 @@ export function QuizSummaryCard({ score, totalQuestions, xpAwarded, onDone }: Qu
       <View style={styles.xpPill}>
         <Text style={styles.xpText}>{t('quiz.xpAwarded', { xp: xpAwarded })}</Text>
       </View>
+      {secondaryAction ? (
+        <Pressable
+          onPress={secondaryAction.onPress}
+          disabled={secondaryAction.disabled}
+          style={[
+            styles.secondaryButton,
+            secondaryAction.variant === 'solid'
+              ? { backgroundColor: colors.accent }
+              : { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.accent },
+          ]}
+        >
+          <Text
+            style={[
+              styles.secondaryButtonText,
+              { color: secondaryAction.variant === 'solid' ? '#fff' : colors.accentStrong },
+            ]}
+          >
+            {secondaryAction.label}
+          </Text>
+        </Pressable>
+      ) : null}
       <Pressable onPress={onDone} style={styles.doneButton}>
         <Text style={styles.doneButtonText}>{t('quiz.doneCta')}</Text>
       </Pressable>
@@ -56,6 +87,13 @@ const styles = {
     backgroundColor: colors.badgeEarnedBg,
   },
   xpText: { fontFamily: fonts.sansBold, fontSize: 13, color: colors.accentStrong },
+  secondaryButton: {
+    width: '100%' as const,
+    padding: 14,
+    borderRadius: 14,
+    alignItems: 'center' as const,
+  },
+  secondaryButtonText: { fontFamily: fonts.sansSemiBold, fontSize: 15 },
   doneButton: {
     width: '100%' as const,
     padding: 14,

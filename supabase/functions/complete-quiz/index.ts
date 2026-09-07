@@ -1,20 +1,6 @@
 import { QUIZ_XP_PER_CORRECT_ANSWER } from '../../../constants/quiz.ts';
+import { gradeAnswers } from '../_shared/quiz-grading.ts';
 import { createUserScopedClient } from '../_shared/supabase-client.ts';
-
-interface SubmittedAnswer {
-  questionId: string;
-  selectedOptionIndex: number;
-}
-
-function isSubmittedAnswer(value: unknown): value is SubmittedAnswer {
-  const record = value as Record<string, unknown> | null;
-  return (
-    typeof record === 'object' &&
-    record !== null &&
-    typeof record.questionId === 'string' &&
-    typeof record.selectedOptionIndex === 'number'
-  );
-}
 
 Deno.serve(async (req: Request) => {
   try {
@@ -58,13 +44,7 @@ Deno.serve(async (req: Request) => {
     // Never trust a client-supplied score — always regrade from the stored answer key, the
     // same "re-derive server-side" principle score-swipe applies to swipe categories.
     const correctByQuestionId = new Map(questions.map((q) => [q.id, q.correct_option_index]));
-    const validAnswers = (answers as unknown[])
-      .filter(isSubmittedAnswer)
-      .filter((answer) => correctByQuestionId.has(answer.questionId));
-
-    const score = validAnswers.filter(
-      (answer) => correctByQuestionId.get(answer.questionId) === answer.selectedOptionIndex,
-    ).length;
+    const { score, validAnswers } = gradeAnswers(answers, correctByQuestionId);
 
     await Promise.all(
       validAnswers.map((answer) =>
