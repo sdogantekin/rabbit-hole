@@ -52,6 +52,15 @@ export const colors = {
   badgeEarnedDot: oklch(50, 0.13, 150),
   badgeUnearnedBg: oklch(93, 0.005, 60),
   badgeUnearnedDot: oklch(80, 0.005, 60),
+
+  // Quiz answer feedback (post-selection option highlighting) — same hues as accent/negative
+  // above, tuned separately to match the Claude Design canvas mockup exactly.
+  quizCorrectBorder: oklch(60, 0.14, 150),
+  quizCorrectBg: oklch(95, 0.05, 150),
+  quizCorrectText: oklch(30, 0.1, 150),
+  quizIncorrectBorder: oklch(60, 0.15, 25),
+  quizIncorrectBg: oklch(95, 0.06, 25),
+  quizIncorrectText: oklch(35, 0.13, 25),
 } as const;
 
 export const fonts = {

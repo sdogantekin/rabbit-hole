@@ -12,6 +12,7 @@ import { BADGE_DEFINITIONS } from '@/lib/badges';
 import { t } from '@/lib/localization';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useProfileQuery, useUploadAvatarMutation } from '@/lib/supabase/queries/profile';
+import { useLatestQuizAccuracyQuery } from '@/lib/supabase/queries/quiz';
 import { useSavedArticlesQuery } from '@/lib/supabase/queries/saved-articles';
 import { useInterestWeightsQuery } from '@/lib/supabase/queries/user-interests';
 
@@ -25,6 +26,7 @@ export default function Profile() {
   const { data: profile } = useProfileQuery(userId);
   const { data: weights = [] } = useInterestWeightsQuery(userId);
   const { data: saved = [] } = useSavedArticlesQuery(userId);
+  const { data: lastQuizAccuracy = null } = useLatestQuizAccuracyQuery(userId);
   const uploadAvatar = useUploadAvatarMutation(userId);
 
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -39,7 +41,7 @@ export default function Profile() {
     .slice(0, 6);
   const maxWeight = Math.max(1, ...weightBars.map((w) => w.weight));
 
-  const badges = BADGE_DEFINITIONS.map((b) => ({ ...b, earned: b.isEarned(saved) }));
+  const badges = BADGE_DEFINITIONS.map((b) => ({ ...b, earned: b.isEarned(saved, lastQuizAccuracy) }));
 
   const pickImage = async (source: 'camera' | 'library') => {
     setPickerOpen(false);

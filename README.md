@@ -18,8 +18,9 @@ Built and working end-to-end against a real hosted Supabase project:
 - **Onboarding:** intro → interest selection (min. 3 of 10 curated categories) → account creation (email OTP or "Continue as guest" via Supabase anonymous auth)
 - **Swipe feed:** gesture-based card deck backed by a real Wikipedia crawl-and-cache pipeline, server-side category-weighted recommendation with exploration, tap-to-expand reader view
 - **Profile:** streak/XP stats, interest-weight breakdown, liked-articles list, badges computed live from real activity, avatar upload, privacy/consent toggles, edit-interests flow
+- **Quiz mode:** unlocks at 5 liked articles, generates short multiple-choice quizzes from your last 10-15 likes via a provider-agnostic LLM adapter (`supabase/functions/_shared/llm/`, Claude Haiku by default), grounded strictly in the source extracts and validated server-side, awards XP on completion
 
-Not yet built: quiz mode, streak/XP scoring logic (the columns exist and display, but nothing increments them yet), social sharing, and the `badges`/`user_badges` schema (v2 per `requirements.md`'s iteration plan — the current badges are computed client-side from real data, not stored).
+Not yet built: streak/XP scoring for swipes (quiz XP now works, but swiping itself still doesn't increment anything), social sharing, and the `badges`/`user_badges` schema (v2 per `requirements.md`'s iteration plan — the current badges are computed client-side from real data, not stored).
 
 ## Prerequisites
 

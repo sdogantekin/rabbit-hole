@@ -1,6 +1,7 @@
 // Hand-written to match supabase/migrations/20260904232051_init_onboarding_schema.sql,
-// supabase/migrations/20260905192540_swipe_feed_schema.sql, and
-// supabase/migrations/20260906102444_profile_extras.sql.
+// supabase/migrations/20260905192540_swipe_feed_schema.sql,
+// supabase/migrations/20260906102444_profile_extras.sql, and
+// supabase/migrations/20260907090000_quiz_schema.sql.
 // Replace with `supabase gen types typescript` output once the schema stabilizes.
 export interface Database {
   public: {
@@ -109,6 +110,51 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['saved_articles']['Row']>;
         Relationships: [];
       };
+      quiz_sessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          created_at: string;
+          completed_at: string | null;
+          score: number;
+          total_questions: number;
+          article_set_key: string;
+        };
+        Insert: {
+          user_id: string;
+          total_questions: number;
+          article_set_key: string;
+          score?: number;
+          completed_at?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['quiz_sessions']['Row']>;
+        Relationships: [];
+      };
+      quiz_questions: {
+        Row: {
+          id: string;
+          quiz_session_id: string;
+          article_pageid: number;
+          article_lang: string;
+          question_text: string;
+          options: string[];
+          correct_option_index: number;
+          user_answer_index: number | null;
+          question_order: number;
+        };
+        Insert: {
+          quiz_session_id: string;
+          article_pageid: number;
+          article_lang?: string;
+          question_text: string;
+          options: string[];
+          correct_option_index: number;
+          question_order: number;
+          user_answer_index?: number | null;
+        };
+        Update: Partial<Database['public']['Tables']['quiz_questions']['Row']>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -130,6 +176,13 @@ export interface Database {
           p_limit: number;
         };
         Returns: Database['public']['Tables']['articles_cache']['Row'][];
+      };
+      increment_discovery_score: {
+        Args: {
+          p_user_id: string;
+          p_delta: number;
+        };
+        Returns: undefined;
       };
     };
   };
