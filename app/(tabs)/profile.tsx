@@ -41,7 +41,13 @@ export default function Profile() {
     .slice(0, 6);
   const maxWeight = Math.max(1, ...weightBars.map((w) => w.weight));
 
-  const badges = BADGE_DEFINITIONS.map((b) => ({ ...b, earned: b.isEarned(saved, lastQuizAccuracy) }));
+  const badgeStats = {
+    saved,
+    lastQuizAccuracy,
+    streakCount: profile?.streak_count ?? 0,
+    discoveryScore: profile?.discovery_score ?? 0,
+  };
+  const badges = BADGE_DEFINITIONS.map((b) => ({ ...b, earned: b.isEarned(badgeStats) }));
 
   const pickImage = async (source: 'camera' | 'library') => {
     setPickerOpen(false);
@@ -91,7 +97,11 @@ export default function Profile() {
 
       <View>
         <Text style={styles.sectionTitle}>{t('profile.badgesTitle')}</Text>
-        <View style={{ flexDirection: 'row', gap: 14 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 14, paddingRight: 8 }}
+        >
           {badges.map((b) => (
             <View key={b.id} style={{ alignItems: 'center', gap: 6, width: 64 }}>
               <View
@@ -115,7 +125,7 @@ export default function Profile() {
               </Text>
             </View>
           ))}
-        </View>
+        </ScrollView>
       </View>
 
       <View>
