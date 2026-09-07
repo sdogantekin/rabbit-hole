@@ -116,6 +116,7 @@ export const en = {
   },
   likedArticles: {
     title: 'Liked articles',
+    backCta: 'Back',
   },
   privacy: {
     title: 'Privacy & consent',
