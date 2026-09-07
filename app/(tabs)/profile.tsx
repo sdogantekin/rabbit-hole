@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { SavedArticleRow } from '@/components/profile/SavedArticleRow';
+import { BADGE_ICONS } from '@/constants/badge-icons';
 import { getCategoryColor } from '@/constants/category-colors';
 import { INTEREST_CATEGORIES } from '@/constants/interest-categories';
 import { colors, fonts } from '@/constants/theme';
@@ -110,11 +111,10 @@ export default function Profile() {
                   { backgroundColor: b.earned ? colors.badgeEarnedBg : colors.badgeUnearnedBg },
                 ]}
               >
-                <View
-                  style={[
-                    styles.badgeDot,
-                    { backgroundColor: b.earned ? colors.badgeEarnedDot : colors.badgeUnearnedDot },
-                  ]}
+                <Image
+                  source={BADGE_ICONS[b.id]}
+                  style={[styles.badgeIcon, { opacity: b.earned ? 1 : 0.35 }]}
+                  resizeMode="contain"
                 />
               </View>
               <Text
@@ -238,13 +238,13 @@ const styles = {
   statLabel: { fontFamily: fonts.sans, fontSize: 10.5, color: colors.inkMuted, marginTop: 2 },
   sectionTitle: { fontFamily: fonts.sansBold, fontSize: 13, color: colors.ink, marginBottom: 10 },
   badgeCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  badgeDot: { width: 16, height: 16, borderRadius: 8 },
+  badgeIcon: { width: 36, height: 36 },
   badgeLabel: { fontFamily: fonts.sans, fontSize: 10, textAlign: 'center' as const, lineHeight: 12 },
   weightLabel: { width: 74, fontFamily: fonts.sans, fontSize: 11.5, color: colors.inkSecondary },
   weightTrack: {

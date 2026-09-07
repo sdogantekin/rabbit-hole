@@ -73,6 +73,11 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     isEarned: ({ streakCount }) => streakCount >= 7,
   },
   {
+    id: 'month-streak',
+    labelKey: 'profile.badges.monthStreak',
+    isEarned: ({ streakCount }) => streakCount >= 30,
+  },
+  {
     id: 'rising-scholar',
     labelKey: 'profile.badges.risingScholar',
     isEarned: ({ discoveryScore }) => discoveryScore >= 100,

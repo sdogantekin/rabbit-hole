@@ -49,9 +49,7 @@ export const colors = {
   negativeBorder: oklch(58, 0.16, 25),
 
   badgeEarnedBg: oklch(90, 0.05, 150),
-  badgeEarnedDot: oklch(50, 0.13, 150),
   badgeUnearnedBg: oklch(93, 0.005, 60),
-  badgeUnearnedDot: oklch(80, 0.005, 60),
 
   // Quiz answer feedback (post-selection option highlighting) — same hues as accent/negative
   // above, tuned separately to match the Claude Design canvas mockup exactly.

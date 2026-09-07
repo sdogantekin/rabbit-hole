@@ -99,6 +99,7 @@ export const en = {
       quizAce: 'Quiz Ace',
       streakKeeper: 'Streak Keeper',
       weekStreak: 'Week Streak',
+      monthStreak: 'Month Streak',
       risingScholar: 'Rising Scholar',
       scholar: 'Scholar',
     },
