@@ -1,8 +1,9 @@
 // Hand-written to match supabase/migrations/20260904232051_init_onboarding_schema.sql,
 // supabase/migrations/20260905192540_swipe_feed_schema.sql,
 // supabase/migrations/20260906102444_profile_extras.sql,
-// supabase/migrations/20260907090000_quiz_schema.sql, and
-// supabase/migrations/20260907160000_quiz_sharing_schema.sql.
+// supabase/migrations/20260907090000_quiz_schema.sql,
+// supabase/migrations/20260907160000_quiz_sharing_schema.sql, and
+// supabase/migrations/20260909090000_swipe_streak_xp.sql.
 // Replace with `supabase gen types typescript` output once the schema stabilizes.
 export interface Database {
   public: {
@@ -222,6 +223,13 @@ export interface Database {
           p_user_ids: string[];
         };
         Returns: { id: string; display_name: string | null }[];
+      };
+      record_swipe_activity: {
+        Args: {
+          p_user_id: string;
+          p_xp_delta: number;
+        };
+        Returns: undefined;
       };
     };
   };

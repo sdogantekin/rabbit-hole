@@ -8,6 +8,12 @@ const SKIP_DELTA = -0.05;
 const WEIGHT_FLOOR = 0.1;
 const WEIGHT_CAP = 5.0;
 
+// design.md §6: "small amount per swipe" — deliberately much smaller than
+// QUIZ_XP_PER_CORRECT_ANSWER (constants/quiz.ts) so quiz performance meaningfully outweighs
+// pure swipe volume, per the same design note. Applies to both like and skip: it's rewarding
+// the swipe/streak activity itself, not the category signal (that's LIKE_DELTA/SKIP_DELTA).
+const SWIPE_XP = 1;
+
 Deno.serve(async (req: Request) => {
   try {
     const { pageId, lang = 'en', direction, categoryId } = await req.json();
@@ -68,6 +74,12 @@ Deno.serve(async (req: Request) => {
     for (const result of weightResults) {
       if (result.error) console.error('apply_interest_weight_delta failed:', result.error.message);
     }
+
+    const { error: activityError } = await supabase.rpc('record_swipe_activity', {
+      p_user_id: user.id,
+      p_xp_delta: SWIPE_XP,
+    });
+    if (activityError) console.error('record_swipe_activity failed:', activityError.message);
 
     if (direction === 'like') {
       await supabase

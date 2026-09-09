@@ -51,9 +51,13 @@ export function useFetchNextBatchMutation() {
   });
 }
 
-export function useSubmitSwipeMutation() {
+// Streak/XP just changed server-side (score-swipe now calls record_swipe_activity on every
+// swipe) — invalidate so the header's streak/XP badge picks it up without a manual refresh.
+export function useSubmitSwipeMutation(userId: string | undefined) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: SubmitSwipeInput) => submitSwipe(input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['profile', userId] }),
   });
 }
 

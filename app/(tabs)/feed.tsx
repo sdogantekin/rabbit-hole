@@ -7,6 +7,7 @@ import { SwipeDeck } from '@/components/swipe-deck/SwipeDeck';
 import { INITIAL_BATCH_SIZE, PREFETCH_THRESHOLD, REFILL_BATCH_SIZE } from '@/constants/feed';
 import { colors, fonts } from '@/constants/theme';
 import { t } from '@/lib/localization';
+import { useAuthStore } from '@/lib/store/auth-store';
 import { useFeedStore } from '@/lib/store/feed-store';
 import {
   useFetchNextBatchMutation,
@@ -17,6 +18,7 @@ import {
 
 export default function Feed() {
   const router = useRouter();
+  const session = useAuthStore((s) => s.session);
   const deck = useFeedStore((state) => state.deck);
   const currentIndex = useFeedStore((state) => state.currentIndex);
   const setDeck = useFeedStore((state) => state.setDeck);
@@ -24,7 +26,7 @@ export default function Feed() {
   const advance = useFeedStore((state) => state.advance);
 
   const fetchNextBatch = useFetchNextBatchMutation();
-  const submitSwipe = useSubmitSwipeMutation();
+  const submitSwipe = useSubmitSwipeMutation(session?.user.id);
   const primeArticleCache = usePrimeArticleCache();
 
   const [caughtUp, setCaughtUp] = useState(false);
