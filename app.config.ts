@@ -17,13 +17,11 @@ const config: ExpoConfig = {
   scheme: 'rabbithole',
   userInterfaceStyle: 'light',
   ios: {
-    // TODO: replace with a real reversed-domain identifier before any device or store build.
-    bundleIdentifier: 'com.rabbithole.app',
+    bundleIdentifier: 'com.sdogantekin.rabbithole',
     supportsTablet: true,
   },
   android: {
-    // TODO: replace with a real package name before any device or store build.
-    package: 'com.rabbithole.app',
+    package: 'com.sdogantekin.rabbithole',
     adaptiveIcon: {
       backgroundColor: '#E6F4FE',
       foregroundImage: './assets/android-icon-foreground.png',
@@ -33,6 +31,14 @@ const config: ExpoConfig = {
   },
   web: {
     favicon: './assets/favicon.png',
+  },
+  extra: {
+    eas: {
+      // Links this app config to the @serkan.dogantekin/rabbit-hole EAS project
+      // (https://expo.dev/accounts/serkan.dogantekin/projects/rabbit-hole), created via
+      // `eas init`. Not a secret — this id is meaningless without the account's own auth.
+      projectId: '3d65b3f1-8f12-4e30-9ea5-18af62db47ea',
+    },
   },
   plugins: [
     'expo-router',
