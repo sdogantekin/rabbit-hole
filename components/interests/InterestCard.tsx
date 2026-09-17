@@ -23,6 +23,9 @@ export function InterestCard({ category, selected, onPress }: InterestCardProps)
         alignItems: 'center',
         gap: 10,
         padding: 14,
+        // Fixed height so a 2-line label ("Space & Astronomy") and a 1-line label
+        // ("History") produce the same card size instead of an uneven grid.
+        minHeight: 62,
         borderRadius: 14,
         borderWidth: 1.5,
         borderColor: selected ? accent : colors.border,
@@ -30,7 +33,10 @@ export function InterestCard({ category, selected, onPress }: InterestCardProps)
       }}
     >
       <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: accent }} />
-      <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.ink }}>
+      <Text
+        style={{ flexShrink: 1, fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.ink }}
+        numberOfLines={2}
+      >
         {category.label}
       </Text>
     </Pressable>

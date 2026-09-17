@@ -227,12 +227,17 @@ const styles = StyleSheet.create({
   skipStamp: { right: 18, transform: [{ rotate: '14deg' }] },
   stampText: {
     fontFamily: fonts.sansBold,
-    fontSize: 12,
+    fontSize: 18,
     letterSpacing: 0.5,
-    borderWidth: 2.5,
+    borderWidth: 3,
     borderRadius: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 6,
+    // A border alone read as too faint against a busy photo/illustration behind it — a
+    // solid fill (rather than the card's own background, which varies per card) guarantees
+    // contrast regardless of what's underneath.
+    backgroundColor: '#ffffff',
+    overflow: 'hidden',
   },
   hintOverlay: {
     backgroundColor: 'rgba(0,0,0,0.45)',

@@ -21,9 +21,9 @@ export function SwipeControls({ onSkip, onLike, disabled }: SwipeControlsProps) 
         accessibilityRole="button"
         accessibilityLabel={t('feed.controls.skipLabel')}
         style={{
-          width: 56,
-          height: 56,
-          borderRadius: 28,
+          width: 60,
+          height: 60,
+          borderRadius: 30,
           borderWidth: 1.5,
           borderColor: colors.negativeBorder,
           backgroundColor: colors.surface,
@@ -31,7 +31,7 @@ export function SwipeControls({ onSkip, onLike, disabled }: SwipeControlsProps) 
           justifyContent: 'center',
         }}
       >
-        <Ionicons name="close" size={22} color={colors.negative} />
+        <Ionicons name="close" size={24} color={colors.negative} />
       </Pressable>
       <Pressable
         onPress={onLike}
@@ -39,9 +39,9 @@ export function SwipeControls({ onSkip, onLike, disabled }: SwipeControlsProps) 
         accessibilityRole="button"
         accessibilityLabel={t('feed.controls.likeLabel')}
         style={{
-          width: 64,
-          height: 64,
-          borderRadius: 32,
+          width: 60,
+          height: 60,
+          borderRadius: 30,
           backgroundColor: colors.accent,
           alignItems: 'center',
           justifyContent: 'center',
