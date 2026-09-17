@@ -23,10 +23,13 @@ const config: ExpoConfig = {
   android: {
     package: 'com.sdogantekin.rabbithole',
     adaptiveIcon: {
-      backgroundColor: '#E6F4FE',
+      // Sampled directly from the icon artwork's own background (icons/appstore.png) rather
+      // than picked separately, so the two match exactly. No backgroundImage/monochromeImage:
+      // the icon pack (see icons/README.md) only ships a foreground layer + this flat color,
+      // and doesn't include a themed/monochrome variant (Android 13+ only, optional — falls
+      // back to the normal colored icon without one).
+      backgroundColor: '#BDC9B7',
       foregroundImage: './assets/android-icon-foreground.png',
-      backgroundImage: './assets/android-icon-background.png',
-      monochromeImage: './assets/android-icon-monochrome.png',
     },
   },
   web: {
