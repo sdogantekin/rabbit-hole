@@ -47,7 +47,19 @@ const config: ExpoConfig = {
     'expo-router',
     'expo-font',
     'expo-image',
-    'expo-splash-screen',
+    [
+      'expo-splash-screen',
+      {
+        // expo-splash-screen defaults to imageWidth: 100 and resizeMode: 'contain' — a small
+        // centered logo. Full-bleed-looking splash (the whole icon square, letterboxed top
+        // and bottom by its own background color) instead needs an explicit, wide
+        // imageWidth; 400 spans close to edge-to-edge on typical phone widths (~360-430pt).
+        image: './assets/splash-icon.png',
+        imageWidth: 400,
+        resizeMode: 'contain',
+        backgroundColor: '#BDC9B7',
+      },
+    ],
     [
       'expo-image-picker',
       {
