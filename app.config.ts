@@ -67,6 +67,7 @@ const config: ExpoConfig = {
         cameraPermission: 'Let RabbitHole use your camera to take a profile picture.',
       },
     ],
+    '@react-native-google-signin/google-signin',
   ],
 };
 

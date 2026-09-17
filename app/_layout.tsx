@@ -10,6 +10,7 @@ import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
 import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
 import { SourceSerif4_400Regular } from '@expo-google-fonts/source-serif-4/400Regular';
 import { SourceSerif4_600SemiBold } from '@expo-google-fonts/source-serif-4/600SemiBold';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
@@ -24,6 +25,11 @@ import { useAuthStore } from '@/lib/store/auth-store';
 const queryClient = new QueryClient();
 
 SplashScreen.preventAutoHideAsync();
+
+// The WEB client id, not the Android one — see lib/supabase/queries/auth.ts's
+// signInWithGoogle comment for why. Configuring once at module load (not inside a
+// component) matches Google's own setup guidance.
+GoogleSignin.configure({ webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID });
 
 export default function RootLayout() {
   const setSession = useAuthStore((state) => state.setSession);

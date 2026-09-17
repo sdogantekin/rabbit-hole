@@ -3,11 +3,12 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { EmailOtpForm } from '@/components/auth/EmailOtpForm';
+import { Ionicons } from '@/constants/icons';
 import { colors, fonts } from '@/constants/theme';
 import { t } from '@/lib/localization';
 import { useOnboardingStore } from '@/lib/store/onboarding-store';
 import { supabase } from '@/lib/supabase/client';
-import { signInAsGuest } from '@/lib/supabase/queries/auth';
+import { signInAsGuest, signInWithGoogle } from '@/lib/supabase/queries/auth';
 import { saveUserInterests } from '@/lib/supabase/queries/user-interests';
 
 export default function Auth() {
@@ -15,6 +16,8 @@ export default function Auth() {
   const selectedCategorySlugs = useOnboardingStore((state) => state.selectedCategorySlugs);
   const resetOnboarding = useOnboardingStore((state) => state.reset);
   const [isGuestSubmitting, setIsGuestSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
 
   // Shared by both the email-verified callback and the guest button: whichever way the
   // user ends up with a session, saving the pending interests and moving on is identical.
@@ -35,6 +38,19 @@ export default function Auth() {
       await finishOnboarding();
     } finally {
       setIsGuestSubmitting(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setGoogleError(null);
+    setIsGoogleSubmitting(true);
+    try {
+      await signInWithGoogle();
+      await finishOnboarding();
+    } catch (err) {
+      setGoogleError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsGoogleSubmitting(false);
     }
   };
 
@@ -67,6 +83,31 @@ export default function Auth() {
         <View style={{ height: 1, flex: 1, backgroundColor: colors.border }} />
       </View>
       <View style={{ paddingHorizontal: 24 }}>
+        <Pressable
+          onPress={handleGoogle}
+          disabled={isGoogleSubmitting}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            borderRadius: 16,
+            borderWidth: 1.5,
+            borderColor: colors.border,
+            paddingVertical: 16,
+            marginBottom: 12,
+          }}
+        >
+          <Ionicons name="logo-google" size={18} color={colors.ink} />
+          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.ink }}>
+            {isGoogleSubmitting ? '…' : t('onboarding.auth.googleCta')}
+          </Text>
+        </Pressable>
+        {googleError ? (
+          <Text style={{ fontFamily: fonts.sans, fontSize: 13, color: colors.negativeBorder, marginBottom: 12 }}>
+            {googleError}
+          </Text>
+        ) : null}
         <Pressable
           onPress={handleGuest}
           disabled={isGuestSubmitting}

@@ -24,6 +24,7 @@ export const en = {
       verifyCta: 'Verify',
       resendCta: 'Use a different email',
       guestDivider: 'or',
+      googleCta: 'Continue with Google',
       guestCta: 'Continue as guest',
       guestDisclaimer: 'Your picks stay on this device until you add an email later.',
     },
