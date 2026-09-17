@@ -143,8 +143,10 @@ max_catalogs = 2
 # [storage.analytics.buckets.my-warehouse]
 
 # Store vector embeddings in S3 for large and durable datasets
+# Disabled: vector buckets need a paid Supabase tier, which this project isn't on — matching
+# the actual remote value avoids `supabase config push` failing on this unrelated section.
 [storage.vector]
-enabled = true
+enabled = false
 max_buckets = 10
 max_indexes = 5
 
@@ -331,6 +333,21 @@ url = ""
 # If enabled, the nonce check will be skipped. Required for local sign in with Google auth.
 skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
+email_optional = false
+
+# Android native Google Sign-In (app/(onboarding)/auth.tsx). client_id is the WEB OAuth
+# client — GoogleSignin.configure({webClientId}) makes the ID token's audience this one, not
+# the Android client id, which only binds the app's package name + signing SHA-1 with Google
+# Play Services on-device and which Supabase itself never sees. GCP project:
+# console.cloud.google.com "rabbithole-508921".
+[auth.external.google]
+enabled = true
+client_id = "433818528800-ukdvqtqu0atvuem2j01arqr1f5lt9dkg.apps.googleusercontent.com"
+# DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+redirect_uri = ""
+url = ""
+skip_nonce_check = false
 email_optional = false
 
 # Allow Solana wallet holders to sign in to your project via the Sign in with Solana (SIWS, EIP-4361) standard.
