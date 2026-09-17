@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { SwipeControls } from '@/components/swipe-deck/SwipeControls';
-import { SwipeDeck } from '@/components/swipe-deck/SwipeDeck';
+import { SwipeDeck, type SwipeDeckHandle } from '@/components/swipe-deck/SwipeDeck';
 import { INITIAL_BATCH_SIZE, PREFETCH_THRESHOLD, REFILL_BATCH_SIZE } from '@/constants/feed';
 import { colors, fonts } from '@/constants/theme';
 import { t } from '@/lib/localization';
@@ -32,7 +32,9 @@ export default function Feed() {
   const [caughtUp, setCaughtUp] = useState(false);
   const [initialLoadFailed, setInitialLoadFailed] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isButtonSwipePending, setIsButtonSwipePending] = useState(false);
   const hasLoadedOnce = useRef(false);
+  const deckRef = useRef<SwipeDeckHandle>(null);
 
   const remainingCards = deck.slice(currentIndex);
 
@@ -78,11 +80,20 @@ export default function Feed() {
     // (requirements.md §7's smoothness target), not after the swipe round-trip completes.
     submitSwipe.mutate({ pageId: card.pageId, lang: card.lang, direction, categoryId: card.categoryId });
     setHasInteracted(true);
+    setIsButtonSwipePending(false);
     advance();
   };
 
   const handleTapCard = (card: FeedCard) => {
     router.push(`/card/${card.pageId}`);
+  };
+
+  // Drives the same fling-off-screen animation the gesture uses, rather than swapping the
+  // card instantly — SwipeDeck reports back to handleSwipe once it actually finishes, which
+  // also clears isButtonSwipePending, so a second tap can't restart it mid-flight.
+  const handleButtonSwipe = (direction: 'like' | 'skip') => {
+    setIsButtonSwipePending(true);
+    deckRef.current?.swipeTop(direction);
   };
 
   if (deck.length === 0 && fetchNextBatch.isPending) {
@@ -125,6 +136,7 @@ export default function Feed() {
     <View style={{ flex: 1, backgroundColor: colors.appBackground, paddingTop: 8 }}>
       <View style={{ flex: 1, paddingHorizontal: 20 }}>
         <SwipeDeck
+          ref={deckRef}
           cards={remainingCards}
           onSwipe={handleSwipe}
           onTapCard={handleTapCard}
@@ -133,8 +145,9 @@ export default function Feed() {
         />
       </View>
       <SwipeControls
-        onSkip={() => handleSwipe(remainingCards[0], 'skip')}
-        onLike={() => handleSwipe(remainingCards[0], 'like')}
+        onSkip={() => handleButtonSwipe('skip')}
+        onLike={() => handleButtonSwipe('like')}
+        disabled={isButtonSwipePending}
       />
     </View>
   );

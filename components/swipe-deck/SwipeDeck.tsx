@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -26,6 +26,12 @@ const VISIBLE_STACK_SIZE = 3;
 
 type SwipeDirection = 'like' | 'skip';
 
+export interface SwipeDeckHandle {
+  // Drives the same fling-away animation as the swipe gesture, for the on-screen Like/Skip
+  // buttons (requirements.md §7/§9's tap-target alternative) — a no-op if the deck is empty.
+  swipeTop: (direction: SwipeDirection) => void;
+}
+
 interface SwipeDeckProps {
   cards: FeedCard[];
   onSwipe: (card: FeedCard, direction: SwipeDirection) => void;
@@ -36,8 +42,16 @@ interface SwipeDeckProps {
 
 // Fully controlled: takes the current windowed batch of cards and reports swipes/taps up.
 // Knows nothing about Supabase or TanStack Query — that stays in the screen that uses it.
-export function SwipeDeck({ cards, onSwipe, onTapCard, showHint, onInteract }: SwipeDeckProps) {
+export const SwipeDeck = forwardRef<SwipeDeckHandle, SwipeDeckProps>(function SwipeDeck(
+  { cards, onSwipe, onTapCard, showHint, onInteract },
+  ref,
+) {
   const visibleCards = cards.slice(0, VISIBLE_STACK_SIZE);
+  const topCardRef = useRef<DeckCardHandle>(null);
+
+  useImperativeHandle(ref, () => ({
+    swipeTop: (direction) => topCardRef.current?.swipeAway(direction),
+  }));
 
   return (
     <View style={{ flex: 1 }}>
@@ -46,6 +60,7 @@ export function SwipeDeck({ cards, onSwipe, onTapCard, showHint, onInteract }: S
           stackIndex === 0 ? (
             <DeckCard
               key={`${card.lang}:${card.pageId}`}
+              ref={topCardRef}
               card={card}
               onSwipe={onSwipe}
               onTapCard={onTapCard}
@@ -72,6 +87,10 @@ export function SwipeDeck({ cards, onSwipe, onTapCard, showHint, onInteract }: S
         .reverse()}
     </View>
   );
+});
+
+interface DeckCardHandle {
+  swipeAway: (direction: SwipeDirection) => void;
 }
 
 interface DeckCardProps {
@@ -82,7 +101,10 @@ interface DeckCardProps {
   onInteract: () => void;
 }
 
-function DeckCard({ card, onSwipe, onTapCard, showHint, onInteract }: DeckCardProps) {
+const DeckCard = forwardRef<DeckCardHandle, DeckCardProps>(function DeckCard(
+  { card, onSwipe, onTapCard, showHint, onInteract },
+  ref,
+) {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
 
@@ -91,6 +113,26 @@ function DeckCard({ card, onSwipe, onTapCard, showHint, onInteract }: DeckCardPr
     [card, onSwipe],
   );
   const commitTap = useCallback(() => onTapCard(card), [card, onTapCard]);
+
+  // Shared by the swipe gesture and the on-screen Like/Skip buttons (via the imperative
+  // handle below) — same fling-then-report behavior regardless of how the swipe started.
+  // Reports the swipe only once the card has actually flown off-screen: reporting it
+  // immediately would advance the feed store's index before the spring animation has any
+  // time to play, so the card would just vanish instead of animating away.
+  const swipeAway = useCallback(
+    (direction: SwipeDirection) => {
+      translateX.value = withSpring(
+        direction === 'like' ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5,
+        undefined,
+        (finished) => {
+          if (finished) runOnJS(commitSwipe)(direction);
+        },
+      );
+    },
+    [commitSwipe, translateX],
+  );
+
+  useImperativeHandle(ref, () => ({ swipeAway }), [swipeAway]);
 
   const panGesture = Gesture.Pan()
     .onBegin(() => runOnJS(onInteract)())
@@ -103,14 +145,7 @@ function DeckCard({ card, onSwipe, onTapCard, showHint, onInteract }: DeckCardPr
       const committedLeft = event.translationX < -SWIPE_THRESHOLD || event.velocityX < -VELOCITY_THRESHOLD;
 
       if (committedRight || committedLeft) {
-        const direction: SwipeDirection = committedRight ? 'like' : 'skip';
-        // Report the swipe only once the card has actually flown off-screen — reporting it
-        // immediately advanced the feed store's index on this same tick, which reshuffles
-        // the deck's visible cards before the spring animation has any time to play, so the
-        // card just vanished instead of animating away.
-        translateX.value = withSpring(committedRight ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5, undefined, (finished) => {
-          if (finished) runOnJS(commitSwipe)(direction);
-        });
+        runOnJS(swipeAway)(committedRight ? 'like' : 'skip');
       } else {
         translateX.value = withSpring(0);
         translateY.value = withSpring(0);
@@ -181,7 +216,7 @@ function DeckCard({ card, onSwipe, onTapCard, showHint, onInteract }: DeckCardPr
       </Animated.View>
     </GestureDetector>
   );
-}
+});
 
 const styles = StyleSheet.create({
   stamp: {
