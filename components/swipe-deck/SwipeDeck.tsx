@@ -103,10 +103,14 @@ function DeckCard({ card, onSwipe, onTapCard, showHint, onInteract }: DeckCardPr
       const committedLeft = event.translationX < -SWIPE_THRESHOLD || event.velocityX < -VELOCITY_THRESHOLD;
 
       if (committedRight || committedLeft) {
-        // Fling off-screen while immediately reporting the swipe, so the next card
-        // becomes interactive without waiting on this card's exit animation to finish.
-        translateX.value = withSpring(committedRight ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5);
-        runOnJS(commitSwipe)(committedRight ? 'like' : 'skip');
+        const direction: SwipeDirection = committedRight ? 'like' : 'skip';
+        // Report the swipe only once the card has actually flown off-screen — reporting it
+        // immediately advanced the feed store's index on this same tick, which reshuffles
+        // the deck's visible cards before the spring animation has any time to play, so the
+        // card just vanished instead of animating away.
+        translateX.value = withSpring(committedRight ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5, undefined, (finished) => {
+          if (finished) runOnJS(commitSwipe)(direction);
+        });
       } else {
         translateX.value = withSpring(0);
         translateY.value = withSpring(0);
