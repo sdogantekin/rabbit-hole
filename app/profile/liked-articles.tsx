@@ -1,9 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SavedArticleRow } from '@/components/profile/SavedArticleRow';
+import { Ionicons } from '@/constants/icons';
 import { colors, fonts } from '@/constants/theme';
 import { t } from '@/lib/localization';
 import { useAuthStore } from '@/lib/store/auth-store';

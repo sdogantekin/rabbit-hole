@@ -1,9 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Image, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getCategoryColor } from '@/constants/category-colors';
+import { Ionicons } from '@/constants/icons';
 import { INTEREST_CATEGORIES } from '@/constants/interest-categories';
 import { colors, fonts } from '@/constants/theme';
 import { WIKIPEDIA_LICENSE_NAME, WIKIPEDIA_LICENSE_URL } from '@/constants/wikipedia-license';

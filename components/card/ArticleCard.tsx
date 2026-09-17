@@ -1,7 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Image, Linking, Pressable, Text, View } from 'react-native';
 
 import { getCategoryColor } from '@/constants/category-colors';
+import { Ionicons } from '@/constants/icons';
 import { INTEREST_CATEGORIES } from '@/constants/interest-categories';
 import { colors, fonts } from '@/constants/theme';
 import { WIKIPEDIA_LICENSE_NAME } from '@/constants/wikipedia-license';

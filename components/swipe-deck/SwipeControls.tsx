@@ -1,6 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Pressable, View } from 'react-native';
 
+import { Ionicons } from '@/constants/icons';
 import { colors } from '@/constants/theme';
 import { t } from '@/lib/localization';
 

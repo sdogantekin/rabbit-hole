@@ -1,7 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
 
 import { AppHeader } from '@/components/app-shell/AppHeader';
+import { Ionicons } from '@/constants/icons';
 import { colors, fonts } from '@/constants/theme';
 import { t } from '@/lib/localization';
 import { useAuthStore } from '@/lib/store/auth-store';

@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -7,6 +6,7 @@ import { Image, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SavedArticleRow } from '@/components/profile/SavedArticleRow';
 import { BADGE_ICONS } from '@/constants/badge-icons';
 import { getCategoryColor } from '@/constants/category-colors';
+import { Ionicons } from '@/constants/icons';
 import { INTEREST_CATEGORIES } from '@/constants/interest-categories';
 import { colors, fonts } from '@/constants/theme';
 import { BADGE_DEFINITIONS } from '@/lib/badges';

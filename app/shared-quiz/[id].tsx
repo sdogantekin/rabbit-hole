@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
@@ -7,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LeaderboardSheet } from '@/components/quiz/LeaderboardSheet';
 import { QuizQuestionCard } from '@/components/quiz/QuizQuestionCard';
 import { QuizSummaryCard } from '@/components/quiz/QuizSummaryCard';
+import { Ionicons } from '@/constants/icons';
 import { colors, fonts } from '@/constants/theme';
 import { t } from '@/lib/localization';
 import { useAuthStore } from '@/lib/store/auth-store';
