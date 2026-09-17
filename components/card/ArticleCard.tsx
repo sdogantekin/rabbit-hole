@@ -1,4 +1,6 @@
-import { Image, Linking, Pressable, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { useState } from 'react';
+import { Linking, Pressable, Text, View } from 'react-native';
 
 import { getCategoryColor } from '@/constants/category-colors';
 import { Ionicons } from '@/constants/icons';
@@ -13,6 +15,11 @@ interface ArticleCardProps {
 }
 
 export function ArticleCard({ card }: ArticleCardProps) {
+  // react-native's core Image silently renders nothing on failure, with no error signal to
+  // react to — expo-image (Expo's recommended replacement, more robust with real-world CDN
+  // quirks like a Wikimedia thumbnail still being generated on first request) gives us
+  // onError, so a failed load falls back to the same category placeholder as "no thumbnail."
+  const [imageFailed, setImageFailed] = useState(false);
   const category = INTEREST_CATEGORIES.find((c) => c.id === card.categoryId);
   const accentColor = getCategoryColor(card.categoryId);
 
@@ -30,8 +37,13 @@ export function ArticleCard({ card }: ArticleCardProps) {
       }}
     >
       <View style={{ height: '46%', width: '100%' }}>
-        {card.thumbnailUrl ? (
-          <Image source={{ uri: card.thumbnailUrl }} style={{ flex: 1 }} resizeMode="cover" />
+        {card.thumbnailUrl && !imageFailed ? (
+          <Image
+            source={{ uri: card.thumbnailUrl }}
+            style={{ flex: 1 }}
+            contentFit="cover"
+            onError={() => setImageFailed(true)}
+          />
         ) : (
           <View
             style={{

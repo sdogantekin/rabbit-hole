@@ -1,5 +1,7 @@
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Image, Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getCategoryColor } from '@/constants/category-colors';
@@ -16,6 +18,10 @@ export default function ArticleReader() {
   const insets = useSafeAreaInsets();
   const pageId = Number(id);
   const { data: article, isLoading, isError } = useArticleCacheQuery(pageId, 'en');
+
+  // See ArticleCard's onError comment — same expo-image + fallback-on-failure treatment.
+  // No reset-on-pageId-change needed: each article push is a new screen instance already.
+  const [imageFailed, setImageFailed] = useState(false);
 
   const category = article ? INTEREST_CATEGORIES.find((c) => article.categories.includes(c.id)) : undefined;
 
@@ -56,8 +62,13 @@ export default function ArticleReader() {
               backgroundColor: category ? getCategoryColor(category.id) : colors.neutralWash,
             }}
           >
-            {article.thumbnail_url ? (
-              <Image source={{ uri: article.thumbnail_url }} style={{ flex: 1 }} resizeMode="cover" />
+            {article.thumbnail_url && !imageFailed ? (
+              <Image
+                source={{ uri: article.thumbnail_url }}
+                style={{ flex: 1 }}
+                contentFit="cover"
+                onError={() => setImageFailed(true)}
+              />
             ) : null}
           </View>
 
