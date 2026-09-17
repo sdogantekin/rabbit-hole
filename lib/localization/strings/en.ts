@@ -158,5 +158,13 @@ export const en = {
     leaderboardLabel: 'Public leaderboard',
     leaderboardBody: 'Off by default — opt in to compare discovery scores.',
     doneCta: 'Done',
+    dangerZoneTitle: 'Danger zone',
+    deleteAccountCta: 'Delete my account',
+    deleteAccountConfirmTitle: 'Delete your account?',
+    deleteAccountConfirmBody:
+      'This permanently deletes your account and everything tied to it — liked articles, swipe history, quiz results, streak and XP. This cannot be undone.',
+    deleteAccountConfirmCta: 'Delete',
+    deleteAccountCancelCta: 'Cancel',
+    deleteAccountError: "Couldn't delete your account. Please try again.",
   },
 } as const;

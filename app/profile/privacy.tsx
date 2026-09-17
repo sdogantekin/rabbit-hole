@@ -1,10 +1,12 @@
 import { useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, Pressable, Text, View } from 'react-native';
 
 import { colors, fonts } from '@/constants/theme';
 import { t } from '@/lib/localization';
+import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/lib/store/auth-store';
-import { useProfileQuery, useUpdateProfileMutation } from '@/lib/supabase/queries/profile';
+import { useDeleteAccountMutation, useProfileQuery, useUpdateProfileMutation } from '@/lib/supabase/queries/profile';
 
 export default function Privacy() {
   const router = useRouter();
@@ -12,6 +14,31 @@ export default function Privacy() {
   const userId = session?.user.id;
   const { data: profile } = useProfileQuery(userId);
   const updateProfile = useUpdateProfileMutation(userId);
+  const deleteAccount = useDeleteAccountMutation();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = () => {
+    Alert.alert(t('privacy.deleteAccountConfirmTitle'), t('privacy.deleteAccountConfirmBody'), [
+      { text: t('privacy.deleteAccountCancelCta'), style: 'cancel' },
+      {
+        text: t('privacy.deleteAccountConfirmCta'),
+        style: 'destructive',
+        onPress: () => {
+          setIsDeleting(true);
+          deleteAccount.mutate(undefined, {
+            onSuccess: async () => {
+              await supabase.auth.signOut();
+              router.replace('/(onboarding)/intro');
+            },
+            onError: () => {
+              setIsDeleting(false);
+              Alert.alert(t('privacy.deleteAccountError'));
+            },
+          });
+        },
+      },
+    ]);
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.appBackground, paddingTop: 64, paddingHorizontal: 24, gap: 18 }}>
@@ -31,6 +58,28 @@ export default function Privacy() {
           value={profile?.leaderboard_opt_in ?? false}
           onToggle={() => updateProfile.mutate({ leaderboard_opt_in: !(profile?.leaderboard_opt_in ?? false) })}
         />
+      </View>
+
+      <View style={{ gap: 8 }}>
+        <Text style={{ fontFamily: fonts.sansBold, fontSize: 12, color: colors.negative }}>
+          {t('privacy.dangerZoneTitle')}
+        </Text>
+        <Pressable
+          onPress={handleDeleteAccount}
+          disabled={isDeleting}
+          style={{
+            padding: 16,
+            borderRadius: 16,
+            borderWidth: 1.5,
+            borderColor: colors.negativeBorder,
+            alignItems: 'center',
+            opacity: isDeleting ? 0.6 : 1,
+          }}
+        >
+          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 14.5, color: colors.negative }}>
+            {t('privacy.deleteAccountCta')}
+          </Text>
+        </Pressable>
       </View>
 
       <Pressable

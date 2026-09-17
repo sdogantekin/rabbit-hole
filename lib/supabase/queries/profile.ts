@@ -37,8 +37,7 @@ async function uploadAvatar(userId: string, localUri: string): Promise<string> {
   return publicUrl;
 }
 
-// Header streak/XP badge and the profile screen both read this; currently-default-zero
-// streak/XP since that scoring logic isn't built yet, but the columns are real.
+// Header streak/XP badge and the profile screen both read this.
 export function useProfileQuery(userId: string | undefined) {
   return useQuery({
     queryKey: ['profile', userId],
@@ -60,5 +59,20 @@ export function useUploadAvatarMutation(userId: string | undefined) {
   return useMutation({
     mutationFn: (localUri: string) => uploadAvatar(userId!, localUri),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['profile', userId] }),
+  });
+}
+
+async function deleteAccount(): Promise<void> {
+  const { error } = await supabase.functions.invoke('delete-account');
+  if (error) throw error;
+}
+
+// GDPR right-to-erasure: irreversibly deletes the auth user, which cascades every row
+// (profiles, swipes, saved_articles, quiz history, shared quizzes, ...) via existing FK
+// constraints — see delete-account. Callers must sign out locally afterward; the deleted
+// user's session isn't automatically invalidated client-side.
+export function useDeleteAccountMutation() {
+  return useMutation({
+    mutationFn: () => deleteAccount(),
   });
 }
