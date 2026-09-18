@@ -9,6 +9,10 @@ interface EmailOtpFormProps {
   onVerified: () => void;
 }
 
+// Deliberately simple (not RFC 5322): catches the typos that actually cause bounces
+// (missing @, no domain, no TLD) without rejecting valid-but-unusual addresses.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function EmailOtpForm({ onVerified }: EmailOtpFormProps) {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -16,11 +20,18 @@ export function EmailOtpForm({ onVerified }: EmailOtpFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const trimmedEmail = email.trim();
+  const isEmailValid = EMAIL_PATTERN.test(trimmedEmail);
+
   const handleSendCode = async () => {
+    if (!isEmailValid) {
+      setError(t('onboarding.auth.invalidEmail'));
+      return;
+    }
     setError(null);
     setIsSubmitting(true);
     try {
-      await sendEmailOtp(email);
+      await sendEmailOtp(trimmedEmail);
       setStep('code');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -33,7 +44,7 @@ export function EmailOtpForm({ onVerified }: EmailOtpFormProps) {
     setError(null);
     setIsSubmitting(true);
     try {
-      await verifyEmailOtp(email, code);
+      await verifyEmailOtp(trimmedEmail, code);
       onVerified();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -68,16 +79,16 @@ export function EmailOtpForm({ onVerified }: EmailOtpFormProps) {
           />
           <Pressable
             onPress={handleSendCode}
-            disabled={!email || isSubmitting}
+            disabled={!isEmailValid || isSubmitting}
             style={{
               marginTop: 16,
               alignItems: 'center',
               borderRadius: 16,
               paddingVertical: 16,
-              backgroundColor: email ? colors.ink : colors.neutralWashStrong,
+              backgroundColor: isEmailValid ? colors.ink : colors.neutralWashStrong,
             }}
           >
-            <Text style={{ fontFamily: fonts.sansSemiBold, color: email ? '#fff' : colors.inkFaint }}>
+            <Text style={{ fontFamily: fonts.sansSemiBold, color: isEmailValid ? '#fff' : colors.inkFaint }}>
               {t('onboarding.auth.sendCodeCta')}
             </Text>
           </Pressable>

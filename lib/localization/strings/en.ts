@@ -18,6 +18,7 @@ export const en = {
       body: 'Create an account so your interests and progress stick around.',
       emailLabel: 'Email',
       emailPlaceholder: 'you@example.com',
+      invalidEmail: 'Enter a valid email address.',
       sendCodeCta: 'Send code',
       codeLabel: 'Enter the 6-digit code',
       codePlaceholder: '123456',
