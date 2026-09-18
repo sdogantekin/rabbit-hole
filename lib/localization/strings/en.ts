@@ -137,6 +137,7 @@ export const en = {
     editInterestsCta: 'Edit interests',
     privacyCta: 'Privacy & consent',
     aboutCta: 'About',
+    logoutCta: 'Log out',
     avatar: {
       title: 'Profile photo',
       takePhoto: 'Take photo',

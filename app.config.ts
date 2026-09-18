@@ -50,12 +50,17 @@ const config: ExpoConfig = {
     [
       'expo-splash-screen',
       {
-        // expo-splash-screen defaults to imageWidth: 100 and resizeMode: 'contain' — a small
-        // centered logo. Full-bleed-looking splash (the whole icon square, letterboxed top
-        // and bottom by its own background color) instead needs an explicit, wide
-        // imageWidth; 400 spans close to edge-to-edge on typical phone widths (~360-430pt).
+        // NOT a place to try for a full-bleed image: this plugin's own Android image
+        // generator composites onto a fixed ~288dp canvas and clips anything wider (verified
+        // in its source, plugin/build/withAndroidSplashImages.js) — a previous attempt at
+        // imageWidth: 400 exceeded that ceiling and rendered clipped instead of bigger.
+        // Android 12+ also independently forces its own small centered-icon system splash no
+        // matter what's configured here. The real full-bleed look lives in
+        // components/app-shell/SplashScreenMimic.tsx, a JS-rendered screen shown immediately
+        // after this native phase hides — this config just needs to look clean and
+        // consistent for that brief, unavoidable moment beforehand.
         image: './assets/splash-icon.png',
-        imageWidth: 400,
+        imageWidth: 180,
         resizeMode: 'contain',
         backgroundColor: '#BDC9B7',
       },

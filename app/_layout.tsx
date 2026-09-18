@@ -15,14 +15,19 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { SplashScreenMimic } from '@/components/app-shell/SplashScreenMimic';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/lib/store/auth-store';
 
 const queryClient = new QueryClient();
+
+// Fonts are bundled (no network), so they're often ready almost instantly — without a floor,
+// SplashScreenMimic could flash for only a few ms. This guarantees it's actually seen.
+const MIN_SPLASH_DURATION_MS = 500;
 
 SplashScreen.preventAutoHideAsync();
 
@@ -41,6 +46,12 @@ export default function RootLayout() {
     SourceSerif4_400Regular,
     SourceSerif4_600SemiBold,
   });
+  const [minDurationElapsed, setMinDurationElapsed] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinDurationElapsed(true), MIN_SPLASH_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -50,11 +61,14 @@ export default function RootLayout() {
     return () => subscription.unsubscribe();
   }, [setSession]);
 
+  // Hides the native splash as soon as fonts are ready, revealing SplashScreenMimic
+  // underneath — which then holds until minDurationElapsed, giving the illusion of one
+  // continuous full-bleed splash rather than the OS's own brief small-icon phase.
   useEffect(() => {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded || !minDurationElapsed) return <SplashScreenMimic />;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

@@ -12,6 +12,7 @@ import { colors, fonts } from '@/constants/theme';
 import { BADGE_DEFINITIONS } from '@/lib/badges';
 import { t } from '@/lib/localization';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { supabase } from '@/lib/supabase/client';
 import { useProfileQuery, useUploadAvatarMutation } from '@/lib/supabase/queries/profile';
 import { useLatestQuizAccuracyQuery } from '@/lib/supabase/queries/quiz';
 import { useSavedArticlesQuery } from '@/lib/supabase/queries/saved-articles';
@@ -49,6 +50,13 @@ export default function Profile() {
     discoveryScore: profile?.discovery_score ?? 0,
   };
   const badges = BADGE_DEFINITIONS.map((b) => ({ ...b, earned: b.isEarned(badgeStats) }));
+
+  // No confirmation dialog: unlike account deletion this is fully reversible (just sign back
+  // in), so a low-friction single tap is the right amount of ceremony.
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.replace('/(onboarding)/intro');
+  };
 
   const pickImage = async (source: 'camera' | 'library') => {
     setPickerOpen(false);
@@ -185,6 +193,10 @@ export default function Profile() {
         </Pressable>
       </View>
 
+      <Pressable onPress={handleLogout} style={styles.logoutButton}>
+        <Text style={styles.logoutText}>{t('profile.logoutCta')}</Text>
+      </Pressable>
+
       <Modal visible={pickerOpen} transparent animationType="slide" onRequestClose={() => setPickerOpen(false)}>
         <Pressable style={styles.sheetBackdrop} onPress={() => setPickerOpen(false)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
@@ -273,6 +285,8 @@ const styles = {
   },
   linkText: { fontFamily: fonts.sans, fontSize: 14, color: colors.ink },
   chevron: { fontFamily: fonts.sans, fontSize: 14, color: colors.inkFaint },
+  logoutButton: { padding: 16, borderRadius: 16, alignItems: 'center' as const },
+  logoutText: { fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.inkMuted },
   sheetBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',

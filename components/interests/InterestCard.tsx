@@ -24,8 +24,13 @@ export function InterestCard({ category, selected, onPress }: InterestCardProps)
         gap: 10,
         padding: 14,
         // Fixed height so a 2-line label ("Space & Astronomy") and a 1-line label
-        // ("History") produce the same card size instead of an uneven grid.
-        minHeight: 62,
+        // ("History") produce the same card size instead of an uneven grid. minHeight alone
+        // isn't enough on its own — without an explicit lineHeight, the default font metrics
+        // for a wrapped 2-line label were taller than this floor, so the card grew past it
+        // anyway while its 1-line row-mate stayed at the (too-small) minimum. Padding
+        // (14+14=28) + 2 lines at the lineHeight set below (18*2=36) = 64, so 66 leaves a
+        // couple of px of headroom rather than sitting exactly on the boundary.
+        minHeight: 66,
         borderRadius: 14,
         borderWidth: 1.5,
         borderColor: selected ? accent : colors.border,
@@ -34,7 +39,13 @@ export function InterestCard({ category, selected, onPress }: InterestCardProps)
     >
       <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: accent }} />
       <Text
-        style={{ flexShrink: 1, fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.ink }}
+        style={{
+          flexShrink: 1,
+          fontFamily: fonts.sansSemiBold,
+          fontSize: 14,
+          lineHeight: 18,
+          color: colors.ink,
+        }}
         numberOfLines={2}
       >
         {category.label}
