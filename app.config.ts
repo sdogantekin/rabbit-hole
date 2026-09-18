@@ -50,17 +50,22 @@ const config: ExpoConfig = {
     [
       'expo-splash-screen',
       {
-        // No custom image: this plugin's own Android image generator composites onto a
-        // fixed ~288dp canvas and clips anything wider (verified in its source,
-        // plugin/build/withAndroidSplashImages.js — a previous attempt at imageWidth: 400
-        // exceeded that ceiling and rendered clipped instead of bigger), and Android 12+
-        // separately forces its own small centered-icon system splash regardless of config
-        // anyway. Omitting the image lets that OS-controlled icon phase (brief,
-        // unavoidable) show against the app's own background color instead of a mismatched
-        // one; the real branded moment is components/app-shell/SplashScreenMimic.tsx, a
-        // JS-rendered screen (the onboarding intro's own mark + wordmark) shown immediately
-        // after this native phase hides.
-        backgroundColor: '#fcf3ed',
+        // An image is required here even though we don't want a custom native splash look:
+        // the plugin's styles.xml writer (withAndroidSplashStyles.js) unconditionally points
+        // windowSplashScreenAnimatedIcon at @drawable/splashscreen_logo, but only generates
+        // that drawable (withAndroidSplashImages.js) when `image` is set — omitting it left
+        // a dangling resource reference and broke the Gradle build
+        // (processReleaseResources: "resource drawable/splashscreen_logo ... not found").
+        // Using the adaptive icon's own foreground + background keeps this forced,
+        // OS-controlled icon phase (Android 12+ shows one regardless of config) consistent
+        // with the real app icon rather than looking broken. imageWidth is kept well under
+        // the plugin's ~288dp compositing ceiling (see git history on this file — exceeding
+        // it silently clips instead of scaling up). The real branded moment is
+        // components/app-shell/SplashScreenMimic.tsx, shown immediately after this native
+        // phase hides.
+        image: './assets/android-icon-foreground.png',
+        imageWidth: 172,
+        backgroundColor: '#BDC9B7',
       },
     ],
     [
