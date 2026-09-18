@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { EmailOtpForm } from '@/components/auth/EmailOtpForm';
 import { Ionicons } from '@/constants/icons';
 import { colors, fonts } from '@/constants/theme';
 import { t } from '@/lib/localization';
@@ -66,23 +65,7 @@ export default function Auth() {
       >
         {t('onboarding.auth.body')}
       </Text>
-      <EmailOtpForm onVerified={finishOnboarding} />
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 16, paddingHorizontal: 24 }}>
-        <View style={{ height: 1, flex: 1, backgroundColor: colors.border }} />
-        <Text
-          style={{
-            fontFamily: fonts.sans,
-            fontSize: 12,
-            textTransform: 'uppercase',
-            color: colors.inkFaint,
-            marginHorizontal: 12,
-          }}
-        >
-          {t('onboarding.auth.guestDivider')}
-        </Text>
-        <View style={{ height: 1, flex: 1, backgroundColor: colors.border }} />
-      </View>
-      <View style={{ paddingHorizontal: 24 }}>
+      <View style={{ paddingHorizontal: 24, marginTop: 8 }}>
         <Pressable
           onPress={handleGoogle}
           disabled={isGoogleSubmitting}

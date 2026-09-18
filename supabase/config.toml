@@ -218,8 +218,11 @@ web3 = 30
 # secret = ""
 
 [auth.email]
-# Allow/disallow new user signups via email to your project.
-enable_signup = true
+# Disabled: the app no longer offers email/OTP sign-in (Google only, for now — see
+# app/(onboarding)/auth.tsx). This is what actually stops signInWithOtp from being usable at
+# all, closing off the path that caused Supabase's bounce-rate warning — removing the client
+# UI alone wouldn't have, since the anon key can still call the Auth API directly.
+enable_signup = false
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
