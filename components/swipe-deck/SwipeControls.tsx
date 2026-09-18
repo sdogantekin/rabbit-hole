@@ -14,7 +14,16 @@ interface SwipeControlsProps {
 // the feed screen to the exact same handler the gesture uses — one code path either way.
 export function SwipeControls({ onSkip, onLike, disabled }: SwipeControlsProps) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 28, paddingTop: 16 }}>
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 28,
+        paddingTop: 16,
+        paddingBottom: 16,
+      }}
+    >
       <Pressable
         onPress={onSkip}
         disabled={disabled}

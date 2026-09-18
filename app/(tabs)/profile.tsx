@@ -12,6 +12,7 @@ import { colors, fonts } from '@/constants/theme';
 import { BADGE_DEFINITIONS } from '@/lib/badges';
 import { t } from '@/lib/localization';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { useOnboardingStore } from '@/lib/store/onboarding-store';
 import { supabase } from '@/lib/supabase/client';
 import { signOutOfGoogle } from '@/lib/supabase/queries/auth';
 import { useProfileQuery, useUploadAvatarMutation } from '@/lib/supabase/queries/profile';
@@ -24,6 +25,7 @@ const LIKED_PREVIEW_COUNT = 6;
 export default function Profile() {
   const router = useRouter();
   const session = useAuthStore((s) => s.session);
+  const resetOnboarding = useOnboardingStore((s) => s.reset);
   const userId = session?.user.id;
 
   const { data: profile } = useProfileQuery(userId);
@@ -58,6 +60,10 @@ export default function Profile() {
     // Also clears the native Google session — otherwise it silently re-signs the same
     // account back in on next login without showing the account picker.
     await Promise.all([supabase.auth.signOut(), signOutOfGoogle()]);
+    // The onboarding store persists interest picks locally (so a mid-onboarding relaunch
+    // doesn't lose them) independent of any session — without this, the next account to go
+    // through onboarding on this device would see the previous account's picks pre-selected.
+    resetOnboarding();
     router.replace('/(onboarding)/intro');
   };
 
