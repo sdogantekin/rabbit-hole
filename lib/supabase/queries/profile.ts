@@ -8,7 +8,9 @@ type ProfilePatch = Partial<Database['public']['Tables']['profiles']['Update']>;
 async function fetchProfile(userId: string) {
   const { data, error } = await supabase
     .from('profiles')
-    .select('display_name, avatar_url, streak_count, discovery_score, level, analytics_opt_in, leaderboard_opt_in')
+    .select(
+      'display_name, avatar_url, streak_count, longest_streak, discovery_score, level, analytics_opt_in, leaderboard_opt_in',
+    )
     .eq('id', userId)
     .single();
   if (error) throw error;

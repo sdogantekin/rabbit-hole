@@ -2,8 +2,9 @@
 // supabase/migrations/20260905192540_swipe_feed_schema.sql,
 // supabase/migrations/20260906102444_profile_extras.sql,
 // supabase/migrations/20260907090000_quiz_schema.sql,
-// supabase/migrations/20260907160000_quiz_sharing_schema.sql, and
-// supabase/migrations/20260909090000_swipe_streak_xp.sql.
+// supabase/migrations/20260907160000_quiz_sharing_schema.sql,
+// supabase/migrations/20260909090000_swipe_streak_xp.sql, and
+// supabase/migrations/20260918230000_daily_activity_local_day.sql.
 // Replace with `supabase gen types typescript` output once the schema stabilizes.
 export interface Database {
   public: {
@@ -224,10 +225,11 @@ export interface Database {
         };
         Returns: { id: string; display_name: string | null }[];
       };
-      record_swipe_activity: {
+      record_daily_activity: {
         Args: {
           p_user_id: string;
           p_xp_delta: number;
+          p_timezone?: string;
         };
         Returns: undefined;
       };

@@ -4,7 +4,7 @@ import { createUserScopedClient } from '../_shared/supabase-client.ts';
 
 Deno.serve(async (req: Request) => {
   try {
-    const { sharedQuizId, answers } = await req.json();
+    const { sharedQuizId, answers, timezone = 'UTC' } = await req.json();
     if (typeof sharedQuizId !== 'string' || !Array.isArray(answers)) {
       return Response.json({ error: 'sharedQuizId and answers are required' }, { status: 400 });
     }
@@ -61,12 +61,15 @@ Deno.serve(async (req: Request) => {
     });
     if (insertError) return Response.json({ error: insertError.message }, { status: 500 });
 
+    // D6 (gamification.md §3): playing a shared quiz is the same effort as playing your own,
+    // so it keeps the streak alive too — record_daily_activity, not a plain XP increment.
     const xpAwarded = score * QUIZ_XP_PER_CORRECT_ANSWER;
-    const { error: xpError } = await supabase.rpc('increment_discovery_score', {
+    const { error: activityError } = await supabase.rpc('record_daily_activity', {
       p_user_id: user.id,
-      p_delta: xpAwarded,
+      p_xp_delta: xpAwarded,
+      p_timezone: timezone,
     });
-    if (xpError) console.error('increment_discovery_score failed:', xpError.message);
+    if (activityError) console.error('record_daily_activity failed:', activityError.message);
 
     return Response.json({ score, totalQuestions: questions.length, xpAwarded });
   } catch (err) {

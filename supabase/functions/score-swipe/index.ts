@@ -16,7 +16,7 @@ const SWIPE_XP = 1;
 
 Deno.serve(async (req: Request) => {
   try {
-    const { pageId, lang = 'en', direction, categoryId } = await req.json();
+    const { pageId, lang = 'en', direction, categoryId, timezone = 'UTC' } = await req.json();
     if (
       typeof pageId !== 'number' ||
       (direction !== 'like' && direction !== 'skip') ||
@@ -75,11 +75,12 @@ Deno.serve(async (req: Request) => {
       if (result.error) console.error('apply_interest_weight_delta failed:', result.error.message);
     }
 
-    const { error: activityError } = await supabase.rpc('record_swipe_activity', {
+    const { error: activityError } = await supabase.rpc('record_daily_activity', {
       p_user_id: user.id,
       p_xp_delta: SWIPE_XP,
+      p_timezone: timezone,
     });
-    if (activityError) console.error('record_swipe_activity failed:', activityError.message);
+    if (activityError) console.error('record_daily_activity failed:', activityError.message);
 
     if (direction === 'like') {
       await supabase

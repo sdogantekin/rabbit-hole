@@ -2,6 +2,7 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase/client';
+import { getLocalTimezone } from '@/lib/timezone';
 
 export interface QuizQuestion {
   id: string;
@@ -56,7 +57,7 @@ async function generateQuiz(reshuffle: boolean): Promise<GeneratedQuiz> {
 
 async function completeQuiz(quizSessionId: string, answers: QuizAnswerInput[]): Promise<QuizResult> {
   const { data, error } = await supabase.functions.invoke<QuizResult>('complete-quiz', {
-    body: { quizSessionId, answers },
+    body: { quizSessionId, answers, timezone: getLocalTimezone() },
   });
   if (error) throw error;
   if (!data) throw new Error('failed to complete quiz');

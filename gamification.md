@@ -22,7 +22,7 @@ Section 9 collects every open decision in one numbered list.
 | Mechanic | State | Where it's stored | Who writes it |
 |---|---|---|---|
 | Discovery score (XP) | one integer per user | `profiles.discovery_score` | `score-swipe`, `complete-quiz`, `complete-shared-quiz` (all Edge Functions) |
-| Streak | current + longest + last active day | `profiles.streak_count`, `longest_streak`, `last_active_date` | `score-swipe` via `record_swipe_activity()` |
+| Streak | current + longest + last active day | `profiles.streak_count`, `longest_streak`, `last_active_date` | `score-swipe`, `complete-quiz`, `complete-shared-quiz`, all via `record_daily_activity()` |
 | Level | derived, not stored | computed in `app/(tabs)/profile.tsx` | nobody — pure function of XP |
 | Badges | derived, not stored | computed live in `lib/badges.ts` from likes/streak/XP/last quiz | nobody — recomputed on every profile render |
 | Quiz sessions + answers | one row per quiz, one per question | `quiz_sessions`, `quiz_questions` | `generate-quiz`, `complete-quiz` |
@@ -86,32 +86,34 @@ Rules the code enforces:
 
 ### As built
 
-- Defined as **consecutive calendar days with at least one swipe**
-  (`record_swipe_activity()` in `20260909090000_swipe_streak_xp.sql`).
-- First swipe of a day: if the last active day was yesterday, `streak_count + 1`; if it was
-  today, unchanged; anything older (or never), reset to 1.
-- `longest_streak` is tracked but **not shown anywhere in the UI**.
-- **Quizzes do not count.** Only `score-swipe` calls `record_swipe_activity`; completing a
-  quiz on a day with no swipes does not keep the streak alive.
+- Defined as **consecutive calendar days with at least one swipe or completed quiz**
+  (`record_daily_activity()`, `20260918230000_daily_activity_local_day.sql` and its
+  `20260918231500` follow-up fix).
+- First activity of a day: if the last active day was yesterday, `streak_count + 1`; if it
+  was today, unchanged; anything older (or never), reset to 1. "Yesterday"/"today" are
+  computed in the caller's own timezone, not the server's.
+- `longest_streak` is now **shown on the profile** next to the current streak (D7).
+- **Quizzes count toward the streak (D6).** `complete-quiz` and `complete-shared-quiz` both
+  call `record_daily_activity` (renamed from `record_swipe_activity`) with their XP as the
+  delta, same as `score-swipe`. `increment_discovery_score` is left in place, unused for now
+  — reserved for D4 (XP to a quiz owner when someone else plays their shared quiz), which
+  needs a streak-free increment since the owner didn't do anything that day.
 - **No streak protection / freeze.** `requirements.md` reserves that for premium.
-- The "day" is `current_date` on the Postgres server, i.e. **UTC**, not the user's local
-  day.
+- **The day is computed in the caller's local timezone (D5).** The client sends its IANA
+  zone (`lib/timezone.ts`, `Intl.DateTimeFormat().resolvedOptions().timeZone`) with every
+  streak-affecting call; `record_daily_activity` computes "today" via
+  `(now() at time zone p_timezone)::date`, falling back to UTC for a missing/invalid zone.
+  `last_active_date` only ever advances, never regresses — found while testing D5: a
+  timezone-computed "today" can land *before* a previously recorded day (most plausibly
+  crossing the date line westward, e.g. Tokyo → Los Angeles, right after landing), which
+  would otherwise silently rewind the recorded day. That case is now a no-op for streak
+  bookkeeping (XP still accrues) rather than a regression.
 
 ### Open decisions
 
-- **D5 — Timezone.** A user in Berlin swiping at 00:30 local time is credited to the
-  *previous* UTC day. Two swipes at 23:30 and 00:30 local, on consecutive local days, may
-  count as one day. Recommendation: send the client's timezone (or local date) with the
-  swipe and have `record_swipe_activity` compute the day in that zone. Small change, avoids
-  a class of "my streak reset for no reason" complaints — which are the single most
-  common complaint in every streak-based app.
-- **D6 — Should a quiz count toward the streak?** Recommendation: **yes.** A quiz is a
-  higher-effort action than a swipe; it's strange that it doesn't keep the streak alive.
-  Implement by having `complete-quiz` also call `record_swipe_activity` (renamed to
-  `record_daily_activity`) with the quiz XP as the delta instead of calling
-  `increment_discovery_score` separately.
-- **D7 — Show longest streak.** Recommendation: yes, on the profile next to the current
-  one. It's already tracked; it's free.
+- **D5 — Timezone. Done.** See "as built" above.
+- **D6 — Should a quiz count toward the streak? Done.** See "as built" above.
+- **D7 — Show longest streak. Done.** Shown as a caption on the streak stat tile.
 - **D8 — Streak freeze (premium).** Out of scope until premium exists. Note only that the
   data model already supports it: a freeze is "treat one missed day as not missed."
 
@@ -129,13 +131,17 @@ Rules the code enforces:
 
 - **D9 — Curve.** Linear means level 2 and level 50 cost the same 100 XP. Recommendation:
   keep linear for launch — it's transparent and the numbers are small — but define
-  the level thresholds in one shared constant (`constants/gamification.ts`) so it can
-  become a curve later without touching the UI. If a curve is wanted, the standard choice is
+  the level thresholds in one shared constant so it can become a curve later without
+  touching the UI. **Partially done** as a side effect of D10: `XP_PER_LEVEL` now lives in
+  one place (`app/(tabs)/profile.tsx`, the only file that used the level formula), not yet
+  broken out to its own `constants/gamification.ts` since there's still only one call site —
+  do that split if/when a second one shows up. If a curve is wanted, the standard choice is
   `xpForLevel(n) = 100 × n^1.5` rounded, which keeps early levels quick and stretches later
   ones.
-- **D10 — Progress to next level.** Recommendation: show "340 / 400 XP" and a thin bar
-  under the level label. This is the single cheapest thing that makes XP feel like it's
-  *for* something.
+- **D10 — Progress to next level. Done.** Shown as "N / 100 XP to next level" and a thin
+  bar under the level label. Introduced a shared `XP_PER_LEVEL` constant in `profile.tsx`
+  (D9's "one shared constant" recommendation, pulled forward since D10 needed it anyway to
+  avoid a second copy of the `/ 100` level math).
 - **D11 — Level names.** Recommendation: not yet. Named tiers ("Wanderer", "Scholar") are
   nice but they collide with the badge names already in use (Rising Scholar, Scholar).
   Decide together with the badge set.
@@ -329,7 +335,7 @@ user swipes (like/skip)
   → client: deck advances immediately, no wait
   → score-swipe (Edge Function)
       → apply_interest_weight_delta  (+0.15 like / −0.05 skip on the card's categories)
-      → record_swipe_activity        (+1 XP; streak logic in §3)
+      → record_daily_activity        (+1 XP; streak logic in §3, client's timezone)
   → client invalidates profile query → header streak/XP badge refreshes
 ```
 
@@ -379,12 +385,12 @@ decided.
 | D2 | Daily swipe-XP cap | 50/day, quiz XP uncapped | S |
 | D3 | Perfect-quiz bonus | +25 XP for 100% on 5+ questions | S |
 | D4 | XP for sharing | None for sharing; +10 to owner on first outside play | S |
-| D5 | Streak day = user's local day, not UTC | Yes | S |
-| D6 | Quiz completion counts toward streak | Yes | S |
-| D7 | Show longest streak on profile | Yes | XS |
+| D5 | Streak day = user's local day, not UTC | **Done** | S |
+| D6 | Quiz completion counts toward streak | **Done** | S |
+| D7 | Show longest streak on profile | **Done** | XS |
 | D8 | Streak freeze | Premium only, later | — |
 | D9 | Level curve | Linear for launch, thresholds in one constant | XS |
-| D10 | XP progress bar to next level | Yes | S |
+| D10 | XP progress bar to next level | **Done** | S |
 | D11 | Level names | Not yet | — |
 | D12 | Level-up celebration | After D14 | S |
 | D13 | Badges can't be un-earned | Yes (use longest_streak; "any quiz ≥ 80%") | S |

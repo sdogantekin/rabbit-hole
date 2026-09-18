@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase/client';
+import { getLocalTimezone } from '@/lib/timezone';
 
 import type { QuizAnswerInput, QuizQuestion, QuizResult } from './quiz';
 
@@ -33,7 +34,7 @@ async function shareQuiz(quizSessionId: string): Promise<{ sharedQuizId: string 
 
 async function completeSharedQuiz(sharedQuizId: string, answers: QuizAnswerInput[]): Promise<QuizResult> {
   const { data, error } = await supabase.functions.invoke<QuizResult>('complete-shared-quiz', {
-    body: { sharedQuizId, answers },
+    body: { sharedQuizId, answers, timezone: getLocalTimezone() },
   });
   if (error) throw error;
   if (!data) throw new Error('failed to complete shared quiz');

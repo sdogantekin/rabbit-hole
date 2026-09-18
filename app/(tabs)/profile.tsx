@@ -24,6 +24,9 @@ const LIKED_PREVIEW_COUNT = 6;
 // gamification.md D22: kept short so a name reads well on a leaderboard row.
 const DISPLAY_NAME_MIN_LENGTH = 2;
 const DISPLAY_NAME_MAX_LENGTH = 24;
+// gamification.md D9/D10: matches `level = 1 + floor(discovery_score / 100)` — the only
+// other place this number appears. Linear for launch; a curve later only touches this line.
+const XP_PER_LEVEL = 100;
 
 export default function Profile() {
   const router = useRouter();
@@ -43,7 +46,9 @@ export default function Profile() {
   const [nameDraft, setNameDraft] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
 
-  const level = 1 + Math.floor((profile?.discovery_score ?? 0) / 100);
+  const discoveryScore = profile?.discovery_score ?? 0;
+  const level = 1 + Math.floor(discoveryScore / XP_PER_LEVEL);
+  const xpIntoLevel = discoveryScore % XP_PER_LEVEL;
 
   const weightBars = INTEREST_CATEGORIES.map((c) => ({
     ...c,
@@ -57,7 +62,7 @@ export default function Profile() {
     saved,
     lastQuizAccuracy,
     streakCount: profile?.streak_count ?? 0,
-    discoveryScore: profile?.discovery_score ?? 0,
+    discoveryScore,
   };
   const badges = BADGE_DEFINITIONS.map((b) => ({ ...b, earned: b.isEarned(badgeStats) }));
 
@@ -130,12 +135,20 @@ export default function Profile() {
             )}
           </View>
         </Pressable>
-        <View>
+        <View style={styles.headerText}>
           <Pressable onPress={openNameEditor} style={styles.nameRow}>
             <Text style={styles.name}>{profile?.display_name ?? ''}</Text>
             <Ionicons name="pencil-outline" size={13} color={colors.inkFaint} />
           </Pressable>
           <Text style={styles.levelText}>{t('profile.levelLabel', { level })}</Text>
+          <View style={styles.levelProgressTrack}>
+            <View
+              style={[styles.levelProgressFill, { width: `${(xpIntoLevel / XP_PER_LEVEL) * 100}%` }]}
+            />
+          </View>
+          <Text style={styles.levelProgressText}>
+            {t('profile.xpProgress', { current: xpIntoLevel, total: XP_PER_LEVEL })}
+          </Text>
           <Text style={styles.accountText} numberOfLines={1}>
             {session?.user.is_anonymous ? t('profile.guestAccount') : session?.user.email}
           </Text>
@@ -143,7 +156,15 @@ export default function Profile() {
       </View>
 
       <View style={styles.statsRow}>
-        <StatTile value={profile?.streak_count ?? 0} label={t('profile.stats.streak')} />
+        <StatTile
+          value={profile?.streak_count ?? 0}
+          label={t('profile.stats.streak')}
+          caption={
+            (profile?.longest_streak ?? 0) > 0
+              ? t('profile.stats.longestStreakCaption', { count: profile?.longest_streak ?? 0 })
+              : undefined
+          }
+        />
         <StatTile value={profile?.discovery_score ?? 0} label={t('profile.stats.xp')} />
         <StatTile value={saved.length} label={t('profile.stats.liked')} />
       </View>
@@ -298,11 +319,12 @@ export default function Profile() {
   );
 }
 
-function StatTile({ value, label }: { value: number; label: string }) {
+function StatTile({ value, label, caption }: { value: number; label: string; caption?: string }) {
   return (
     <View style={styles.statTile}>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
+      {caption ? <Text style={styles.statCaption}>{caption}</Text> : null}
     </View>
   );
 }
@@ -310,6 +332,7 @@ function StatTile({ value, label }: { value: number; label: string }) {
 const styles = {
   content: { padding: 20, gap: 22, paddingBottom: 40 },
   headerRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 14 },
+  headerText: { flex: 1 },
   avatar: {
     width: 56,
     height: 56,
@@ -323,7 +346,16 @@ const styles = {
   nameRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 6 },
   name: { fontFamily: fonts.serif, fontSize: 18, color: colors.ink },
   levelText: { fontFamily: fonts.sans, fontSize: 12.5, color: colors.inkMuted },
-  accountText: { fontFamily: fonts.sans, fontSize: 12.5, color: colors.inkFaint, marginTop: 2 },
+  levelProgressTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.neutralWash,
+    overflow: 'hidden' as const,
+    marginTop: 5,
+  },
+  levelProgressFill: { height: '100%' as const, borderRadius: 2, backgroundColor: colors.accent },
+  levelProgressText: { fontFamily: fonts.sans, fontSize: 10.5, color: colors.inkFaint, marginTop: 3 },
+  accountText: { fontFamily: fonts.sans, fontSize: 12.5, color: colors.inkFaint, marginTop: 5 },
   statsRow: { flexDirection: 'row' as const, gap: 10 },
   statTile: {
     flex: 1,
@@ -334,6 +366,7 @@ const styles = {
   },
   statValue: { fontFamily: fonts.sansBold, fontSize: 19, color: colors.ink },
   statLabel: { fontFamily: fonts.sans, fontSize: 10.5, color: colors.inkMuted, marginTop: 2 },
+  statCaption: { fontFamily: fonts.sans, fontSize: 9.5, color: colors.inkFaint, marginTop: 1 },
   sectionTitle: { fontFamily: fonts.sansBold, fontSize: 13, color: colors.ink, marginBottom: 10 },
   badgeCircle: {
     width: 56,

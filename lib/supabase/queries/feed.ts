@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase/client';
+import { getLocalTimezone } from '@/lib/timezone';
 
 export interface FeedCard {
   pageId: number;
@@ -28,7 +29,9 @@ async function fetchNextBatch(batchSize: number): Promise<FeedCard[]> {
 }
 
 async function submitSwipe(input: SubmitSwipeInput): Promise<void> {
-  const { error } = await supabase.functions.invoke('score-swipe', { body: input });
+  const { error } = await supabase.functions.invoke('score-swipe', {
+    body: { ...input, timezone: getLocalTimezone() },
+  });
   if (error) throw error;
 }
 
@@ -51,7 +54,7 @@ export function useFetchNextBatchMutation() {
   });
 }
 
-// Streak/XP just changed server-side (score-swipe now calls record_swipe_activity on every
+// Streak/XP just changed server-side (score-swipe now calls record_daily_activity on every
 // swipe) — invalidate so the header's streak/XP badge picks it up without a manual refresh.
 export function useSubmitSwipeMutation(userId: string | undefined) {
   const queryClient = useQueryClient();
