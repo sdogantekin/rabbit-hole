@@ -43,9 +43,20 @@ export default function Feed() {
       fetchNextBatch.mutate(size, {
         onSuccess: (cards) => {
           cards.forEach(primeArticleCache);
-          if (isInitial) setDeck(cards);
-          else appendCards(cards);
-          setCaughtUp(cards.length === 0);
+          if (isInitial) {
+            setDeck(cards);
+            setCaughtUp(cards.length === 0);
+          } else {
+            // get_unseen_articles_for_category only excludes swiped articles, not ones
+            // already sitting unswiped in the local deck — for a thinly-cached category it
+            // can return the same cards again, which appendCards correctly dedupes. Without
+            // this check, a zero-progress refill would just retrigger the identical fetch
+            // forever (the prefetch effect only stops once caughtUp is true).
+            const beforeCount = useFeedStore.getState().deck.length;
+            appendCards(cards);
+            const afterCount = useFeedStore.getState().deck.length;
+            setCaughtUp(afterCount === beforeCount);
+          }
           setInitialLoadFailed(false);
         },
         onError: () => {
