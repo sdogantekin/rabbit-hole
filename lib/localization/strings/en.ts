@@ -138,6 +138,15 @@ export const en = {
       cancel: 'Cancel',
       permissionDenied: 'Camera/library permission was denied.',
     },
+    editName: {
+      title: 'Your name',
+      placeholder: 'Name',
+      body: 'Shown to friends on quiz leaderboards you appear on.',
+      saveCta: 'Save',
+      cancelCta: 'Cancel',
+      tooShort: 'Name must be at least 2 characters.',
+      tooLong: 'Name must be 24 characters or fewer.',
+    },
   },
   editInterests: {
     title: 'Edit interests',

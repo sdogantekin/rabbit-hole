@@ -1,7 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { SavedArticleRow } from '@/components/profile/SavedArticleRow';
 import { BADGE_ICONS } from '@/constants/badge-icons';
@@ -15,12 +15,15 @@ import { useAuthStore } from '@/lib/store/auth-store';
 import { useOnboardingStore } from '@/lib/store/onboarding-store';
 import { supabase } from '@/lib/supabase/client';
 import { signOutOfGoogle } from '@/lib/supabase/queries/auth';
-import { useProfileQuery, useUploadAvatarMutation } from '@/lib/supabase/queries/profile';
+import { useProfileQuery, useUpdateProfileMutation, useUploadAvatarMutation } from '@/lib/supabase/queries/profile';
 import { useLatestQuizAccuracyQuery } from '@/lib/supabase/queries/quiz';
 import { useSavedArticlesQuery } from '@/lib/supabase/queries/saved-articles';
 import { useInterestWeightsQuery } from '@/lib/supabase/queries/user-interests';
 
 const LIKED_PREVIEW_COUNT = 6;
+// gamification.md D22: kept short so a name reads well on a leaderboard row.
+const DISPLAY_NAME_MIN_LENGTH = 2;
+const DISPLAY_NAME_MAX_LENGTH = 24;
 
 export default function Profile() {
   const router = useRouter();
@@ -33,8 +36,12 @@ export default function Profile() {
   const { data: saved = [] } = useSavedArticlesQuery(userId);
   const { data: lastQuizAccuracy = null } = useLatestQuizAccuracyQuery(userId);
   const uploadAvatar = useUploadAvatarMutation(userId);
+  const updateProfile = useUpdateProfileMutation(userId);
 
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [nameEditorOpen, setNameEditorOpen] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+  const [nameError, setNameError] = useState<string | null>(null);
 
   const level = 1 + Math.floor((profile?.discovery_score ?? 0) / 100);
 
@@ -89,6 +96,28 @@ export default function Profile() {
     uploadAvatar.mutate(result.assets[0].uri);
   };
 
+  const openNameEditor = () => {
+    setNameDraft(profile?.display_name ?? '');
+    setNameError(null);
+    setNameEditorOpen(true);
+  };
+
+  const saveName = () => {
+    const trimmed = nameDraft.trim();
+    if (trimmed.length < DISPLAY_NAME_MIN_LENGTH) {
+      setNameError(t('profile.editName.tooShort'));
+      return;
+    }
+    if (trimmed.length > DISPLAY_NAME_MAX_LENGTH) {
+      setNameError(t('profile.editName.tooLong'));
+      return;
+    }
+    setNameEditorOpen(false);
+    if (trimmed !== profile?.display_name) {
+      updateProfile.mutate({ display_name: trimmed });
+    }
+  };
+
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.appBackground }} contentContainerStyle={styles.content}>
       <View style={styles.headerRow}>
@@ -102,7 +131,10 @@ export default function Profile() {
           </View>
         </Pressable>
         <View>
-          <Text style={styles.name}>Explorer</Text>
+          <Pressable onPress={openNameEditor} style={styles.nameRow}>
+            <Text style={styles.name}>{profile?.display_name ?? ''}</Text>
+            <Ionicons name="pencil-outline" size={13} color={colors.inkFaint} />
+          </Pressable>
           <Text style={styles.levelText}>{t('profile.levelLabel', { level })}</Text>
           <Text style={styles.accountText} numberOfLines={1}>
             {session?.user.is_anonymous ? t('profile.guestAccount') : session?.user.email}
@@ -226,6 +258,42 @@ export default function Profile() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <Modal
+        visible={nameEditorOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setNameEditorOpen(false)}
+      >
+        <Pressable style={styles.sheetBackdrop} onPress={() => setNameEditorOpen(false)}>
+          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>{t('profile.editName.title')}</Text>
+            <Text style={styles.nameEditorBody}>{t('profile.editName.body')}</Text>
+            <TextInput
+              value={nameDraft}
+              onChangeText={(text) => {
+                setNameDraft(text);
+                setNameError(null);
+              }}
+              placeholder={t('profile.editName.placeholder')}
+              placeholderTextColor={colors.inkFaint}
+              maxLength={DISPLAY_NAME_MAX_LENGTH}
+              autoFocus
+              style={styles.nameInput}
+            />
+            {nameError ? <Text style={styles.nameErrorText}>{nameError}</Text> : null}
+            <Pressable onPress={saveName} style={[styles.sheetButton, styles.sheetButtonPrimary]}>
+              <Text style={[styles.sheetButtonText, styles.sheetButtonTextPrimary]}>
+                {t('profile.editName.saveCta')}
+              </Text>
+            </Pressable>
+            <Pressable onPress={() => setNameEditorOpen(false)} style={styles.sheetButton}>
+              <Text style={styles.sheetButtonText}>{t('profile.editName.cancelCta')}</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 }
@@ -252,6 +320,7 @@ const styles = {
     justifyContent: 'center' as const,
   },
   avatarImage: { width: 56, height: 56 },
+  nameRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 6 },
   name: { fontFamily: fonts.serif, fontSize: 18, color: colors.ink },
   levelText: { fontFamily: fonts.sans, fontSize: 12.5, color: colors.inkMuted },
   accountText: { fontFamily: fonts.sans, fontSize: 12.5, color: colors.inkFaint, marginTop: 2 },
@@ -321,4 +390,16 @@ const styles = {
     backgroundColor: colors.neutralWash,
   },
   sheetButtonText: { fontFamily: fonts.sansSemiBold, fontSize: 14.5, color: colors.ink, textAlign: 'center' as const },
+  sheetButtonPrimary: { backgroundColor: colors.ink },
+  sheetButtonTextPrimary: { color: '#fff' },
+  nameEditorBody: { fontFamily: fonts.sans, fontSize: 12.5, color: colors.inkMuted, textAlign: 'center' as const, marginTop: -6 },
+  nameInput: {
+    fontFamily: fonts.sans,
+    fontSize: 15,
+    color: colors.ink,
+    backgroundColor: colors.neutralWash,
+    borderRadius: 14,
+    padding: 14,
+  },
+  nameErrorText: { fontFamily: fonts.sans, fontSize: 12, color: colors.negative, marginTop: -6 },
 };

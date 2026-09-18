@@ -294,20 +294,20 @@ through to that quiz's leaderboard.
   `rabbithole://` link — nothing opens, no store redirect. This is the biggest practical gap
   in the sharing loop.
 - **No notification** to the owner when someone plays their quiz.
-- **No way to edit `display_name`.**
+- ~~No way to edit `display_name`.~~ Fixed — see D22.
 
 ### Open decisions
 
-- **D21 — Web landing page for share links.** Recommendation: **do this before launch.**
-  A static page at `sdogantekin.github.io/rabbit-hole/q/<id>` (same GitHub Pages site as the
-  privacy policy) that shows "Someone challenged you" + a Play Store button, and opens the
-  app via the deep link if installed. Use Android App Links (`https://` links verified via
-  `assetlinks.json`) so the app opens directly when installed. Without this, sharing only
-  works between people who both already have the app, which defeats the growth purpose in
-  `requirements.md` §4.
-- **D22 — Editable display name.** Recommendation: yes, a single field on the profile, before
-  launch. "serkan.dogantekin" as a leaderboard name is fine for testing but not what people
-  want to show friends. Validate length (2–24) and strip whitespace; no uniqueness needed.
+- **D21 — Web landing page for share links. Done.** A static page at
+  `sdogantekin.github.io/rabbit-hole/q/<id>` shows "Someone challenged you" + a Play Store
+  button and opens the app via Android App Links when installed
+  (`app/+native-intent.ts`, `docs/q/index.html`). `assetlinks.json` is live at
+  `sdogantekin.github.io/.well-known/assetlinks.json` (a separate repo, since GitHub Pages
+  serves this project under `/rabbit-hole/`), verified against the live URL.
+- **D22 — Editable display name. Done.** A single field on the profile (tap the name),
+  validated client-side to 2–24 trimmed characters, plus a DB check constraint
+  (1–40 chars) as a safety net against a modified client. No uniqueness required, per the
+  original recommendation.
 - **D23 — Global leaderboard.** Recommendation: **not for launch.** It changes the privacy
   posture (opt-in would then mean "visible to everyone", not "visible to people I quizzed
   with") and it rewards volume over recall. If added later, make it **weekly XP**, not
@@ -395,8 +395,8 @@ decided.
 | D18 | Widen reshuffle pool to 30 likes | Yes | S |
 | D19 | = D6 | | |
 | D20 | New question types | v2 | — |
-| D21 | Web landing page + App Links for share URLs | **Yes, before launch** | M |
-| D22 | Editable display name | Yes, before launch | S |
+| D21 | Web landing page + App Links for share URLs | **Done** | M |
+| D22 | Editable display name | **Done** | S |
 | D23 | Global leaderboard | Not for launch; weekly XP if ever | — |
 | D24 | Friends / social graph | Not for launch | — |
 | D25 | Notify owner on play | v2 with push | — |
