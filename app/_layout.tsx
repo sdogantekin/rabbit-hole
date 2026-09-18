@@ -74,7 +74,16 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <Stack screenOptions={{ headerShown: false }}>
+          {/* animation: 'none' at this outermost level only — it governs the one-time
+              handoff from SplashScreenMimic to whichever group index.tsx redirects into.
+              Left as-is, the default native-stack transition (fade + slide) briefly overlaps
+              the outgoing splash frame with the incoming screen's, and since the two mark
+              positions differ (mimic centers the whole ring+wordmark group; intro.tsx sits
+              higher to leave room for body copy and a button below), that overlap reads as
+              the ring's own center visibly jumping. Nested stacks (e.g. onboarding's own
+              intro -> interests -> auth) are separate navigators and keep their normal
+              transitions. */}
+          <Stack screenOptions={{ headerShown: false, animation: 'none' }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="(onboarding)" />
             <Stack.Screen name="(tabs)" />
