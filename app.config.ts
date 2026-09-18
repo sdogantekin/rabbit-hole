@@ -50,19 +50,17 @@ const config: ExpoConfig = {
     [
       'expo-splash-screen',
       {
-        // NOT a place to try for a full-bleed image: this plugin's own Android image
-        // generator composites onto a fixed ~288dp canvas and clips anything wider (verified
-        // in its source, plugin/build/withAndroidSplashImages.js) — a previous attempt at
-        // imageWidth: 400 exceeded that ceiling and rendered clipped instead of bigger.
-        // Android 12+ also independently forces its own small centered-icon system splash no
-        // matter what's configured here. The real full-bleed look lives in
-        // components/app-shell/SplashScreenMimic.tsx, a JS-rendered screen shown immediately
-        // after this native phase hides — this config just needs to look clean and
-        // consistent for that brief, unavoidable moment beforehand.
-        image: './assets/splash-icon.png',
-        imageWidth: 180,
-        resizeMode: 'contain',
-        backgroundColor: '#BDC9B7',
+        // No custom image: this plugin's own Android image generator composites onto a
+        // fixed ~288dp canvas and clips anything wider (verified in its source,
+        // plugin/build/withAndroidSplashImages.js — a previous attempt at imageWidth: 400
+        // exceeded that ceiling and rendered clipped instead of bigger), and Android 12+
+        // separately forces its own small centered-icon system splash regardless of config
+        // anyway. Omitting the image lets that OS-controlled icon phase (brief,
+        // unavoidable) show against the app's own background color instead of a mismatched
+        // one; the real branded moment is components/app-shell/SplashScreenMimic.tsx, a
+        // JS-rendered screen (the onboarding intro's own mark + wordmark) shown immediately
+        // after this native phase hides.
+        backgroundColor: '#fcf3ed',
       },
     ],
     [
