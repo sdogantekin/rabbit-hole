@@ -32,7 +32,7 @@ export default function Quiz() {
   const { data: playedSharedQuizzes = [] } = usePlayedSharedQuizzesQuery(userId);
   const generateQuiz = useGenerateQuizMutation();
   const completeQuiz = useCompleteQuizMutation(userId);
-  const shareQuiz = useShareQuizMutation();
+  const shareQuiz = useShareQuizMutation(userId);
 
   const stage = useQuizStore((s) => s.stage);
   const mode = useQuizStore((s) => s.mode);

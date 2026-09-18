@@ -49,9 +49,14 @@ export function useSharedQuizQuery(sharedQuizId: string | undefined) {
   });
 }
 
-export function useShareQuizMutation() {
+export function useShareQuizMutation(userId: string | undefined) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (quizSessionId: string) => shareQuiz(quizSessionId),
+    // Bug found 2026-09-19: this was the only write in the file with no invalidation, so a
+    // freshly shared quiz never showed up in "Your shared quizzes" until something else
+    // (app restart, a different mutation) happened to refetch it.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-shared-quizzes', userId] }),
   });
 }
 
