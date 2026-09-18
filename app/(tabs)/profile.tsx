@@ -13,6 +13,7 @@ import { BADGE_DEFINITIONS } from '@/lib/badges';
 import { t } from '@/lib/localization';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { supabase } from '@/lib/supabase/client';
+import { signOutOfGoogle } from '@/lib/supabase/queries/auth';
 import { useProfileQuery, useUploadAvatarMutation } from '@/lib/supabase/queries/profile';
 import { useLatestQuizAccuracyQuery } from '@/lib/supabase/queries/quiz';
 import { useSavedArticlesQuery } from '@/lib/supabase/queries/saved-articles';
@@ -54,7 +55,9 @@ export default function Profile() {
   // No confirmation dialog: unlike account deletion this is fully reversible (just sign back
   // in), so a low-friction single tap is the right amount of ceremony.
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    // Also clears the native Google session — otherwise it silently re-signs the same
+    // account back in on next login without showing the account picker.
+    await Promise.all([supabase.auth.signOut(), signOutOfGoogle()]);
     router.replace('/(onboarding)/intro');
   };
 

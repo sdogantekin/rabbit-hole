@@ -32,3 +32,16 @@ export async function signInWithGoogle(): Promise<void> {
   const { error } = await supabase.auth.signInWithIdToken({ provider: 'google', token: idToken });
   if (error) throw error;
 }
+
+// supabase.auth.signOut() only ends the Supabase session — the native Google SDK keeps its
+// own separate session and, once it has one, silently re-signs the same account back in on
+// the next signIn() call without showing the account picker. Clearing it here is what makes
+// "log out, then choose a different Google account" actually work. Safe to call unconditionally:
+// it's a no-op (resolves without throwing) when there's no active Google session to clear.
+export async function signOutOfGoogle(): Promise<void> {
+  try {
+    await GoogleSignin.signOut();
+  } catch {
+    // Nothing to clear (not signed in via Google, or Play Services unavailable).
+  }
+}
