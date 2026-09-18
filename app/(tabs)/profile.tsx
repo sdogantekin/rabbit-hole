@@ -95,6 +95,9 @@ export default function Profile() {
         <View>
           <Text style={styles.name}>Explorer</Text>
           <Text style={styles.levelText}>{t('profile.levelLabel', { level })}</Text>
+          <Text style={styles.accountText} numberOfLines={1}>
+            {session?.user.is_anonymous ? t('profile.guestAccount') : session?.user.email}
+          </Text>
         </View>
       </View>
 
@@ -242,6 +245,7 @@ const styles = {
   avatarImage: { width: 56, height: 56 },
   name: { fontFamily: fonts.serif, fontSize: 18, color: colors.ink },
   levelText: { fontFamily: fonts.sans, fontSize: 12.5, color: colors.inkMuted },
+  accountText: { fontFamily: fonts.sans, fontSize: 12.5, color: colors.inkFaint, marginTop: 2 },
   statsRow: { flexDirection: 'row' as const, gap: 10 },
   statTile: {
     flex: 1,

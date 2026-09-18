@@ -112,6 +112,7 @@ export const en = {
   },
   profile: {
     levelLabel: 'Level {{level}}',
+    guestAccount: 'Guest',
     stats: {
       streak: 'day streak',
       xp: 'discovery XP',
