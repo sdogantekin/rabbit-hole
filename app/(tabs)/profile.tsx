@@ -14,9 +14,9 @@ import { t } from '@/lib/localization';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useOnboardingStore } from '@/lib/store/onboarding-store';
 import { supabase } from '@/lib/supabase/client';
+import { useEarnedBadgesQuery } from '@/lib/supabase/queries/badges';
 import { signOutOfGoogle } from '@/lib/supabase/queries/auth';
 import { useProfileQuery, useUpdateProfileMutation, useUploadAvatarMutation } from '@/lib/supabase/queries/profile';
-import { useLatestQuizAccuracyQuery } from '@/lib/supabase/queries/quiz';
 import { useSavedArticlesQuery } from '@/lib/supabase/queries/saved-articles';
 import { useInterestWeightsQuery } from '@/lib/supabase/queries/user-interests';
 
@@ -37,7 +37,7 @@ export default function Profile() {
   const { data: profile } = useProfileQuery(userId);
   const { data: weights = [] } = useInterestWeightsQuery(userId);
   const { data: saved = [] } = useSavedArticlesQuery(userId);
-  const { data: lastQuizAccuracy = null } = useLatestQuizAccuracyQuery(userId);
+  const { data: earnedBadgeIds } = useEarnedBadgesQuery(userId);
   const uploadAvatar = useUploadAvatarMutation(userId);
   const updateProfile = useUpdateProfileMutation(userId);
 
@@ -58,13 +58,7 @@ export default function Profile() {
     .slice(0, 6);
   const maxWeight = Math.max(1, ...weightBars.map((w) => w.weight));
 
-  const badgeStats = {
-    saved,
-    lastQuizAccuracy,
-    streakCount: profile?.streak_count ?? 0,
-    discoveryScore,
-  };
-  const badges = BADGE_DEFINITIONS.map((b) => ({ ...b, earned: b.isEarned(badgeStats) }));
+  const badges = BADGE_DEFINITIONS.map((b) => ({ ...b, earned: earnedBadgeIds?.has(b.id) ?? false }));
 
   // No confirmation dialog: unlike account deletion this is fully reversible (just sign back
   // in), so a low-friction single tap is the right amount of ceremony.

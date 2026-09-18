@@ -71,6 +71,11 @@ Deno.serve(async (req: Request) => {
     });
     if (activityError) console.error('record_daily_activity failed:', activityError.message);
 
+    // D14 (gamification.md §5): this doesn't affect Quiz Ace (that's scored off the player's
+    // own quiz_sessions, not quiz_plays) but streak/XP badges can still newly qualify here.
+    const { error: badgesError } = await supabase.rpc('evaluate_and_award_badges');
+    if (badgesError) console.error('evaluate_and_award_badges failed:', badgesError.message);
+
     return Response.json({ score, totalQuestions: questions.length, xpAwarded });
   } catch (err) {
     return Response.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });

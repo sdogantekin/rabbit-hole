@@ -68,6 +68,10 @@ Deno.serve(async (req: Request) => {
     });
     if (activityError) console.error('record_daily_activity failed:', activityError.message);
 
+    // D14 (gamification.md §5): re-evaluate now that this quiz's score/streak/XP are final.
+    const { error: badgesError } = await supabase.rpc('evaluate_and_award_badges');
+    if (badgesError) console.error('evaluate_and_award_badges failed:', badgesError.message);
+
     return Response.json({ score, totalQuestions: session.total_questions, xpAwarded });
   } catch (err) {
     return Response.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });

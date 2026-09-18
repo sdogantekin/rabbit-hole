@@ -55,12 +55,16 @@ export function useFetchNextBatchMutation() {
 }
 
 // Streak/XP just changed server-side (score-swipe now calls record_daily_activity on every
-// swipe) — invalidate so the header's streak/XP badge picks it up without a manual refresh.
+// swipe, then evaluate_and_award_badges — D14, gamification.md §5) — invalidate so the
+// header's streak/XP badge and the profile's badge shelf pick it up without a manual refresh.
 export function useSubmitSwipeMutation(userId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: SubmitSwipeInput) => submitSwipe(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['profile', userId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+      queryClient.invalidateQueries({ queryKey: ['earned-badges', userId] });
+    },
   });
 }
 

@@ -60,8 +60,10 @@ export function useCompleteSharedQuizMutation(userId: string | undefined, shared
   return useMutation({
     mutationFn: (answers: QuizAnswerInput[]) => completeSharedQuiz(sharedQuizId!, answers),
     onSuccess: () => {
-      // XP just changed, and this quiz's alreadyPlayed/leaderboard state just flipped.
+      // XP just changed, this quiz's alreadyPlayed/leaderboard state just flipped, and
+      // evaluate_and_award_badges may have earned new ones (D14, gamification.md §5).
       queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+      queryClient.invalidateQueries({ queryKey: ['earned-badges', userId] });
       queryClient.invalidateQueries({ queryKey: ['shared-quiz', sharedQuizId] });
       queryClient.invalidateQueries({ queryKey: ['shared-quiz-leaderboard', sharedQuizId] });
       queryClient.invalidateQueries({ queryKey: ['played-shared-quizzes', userId] });

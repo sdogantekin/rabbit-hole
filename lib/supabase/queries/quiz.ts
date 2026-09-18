@@ -1,5 +1,5 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase/client';
 import { getLocalTimezone } from '@/lib/timezone';
@@ -78,33 +78,10 @@ export function useCompleteQuizMutation(userId: string | undefined) {
     mutationFn: ({ quizSessionId, answers }: { quizSessionId: string; answers: QuizAnswerInput[] }) =>
       completeQuiz(quizSessionId, answers),
     onSuccess: () => {
-      // XP just changed server-side; refresh the profile stats and the quiz-accuracy badge.
+      // XP/streak just changed server-side, and evaluate_and_award_badges may have earned
+      // new ones (D14, gamification.md §5).
       queryClient.invalidateQueries({ queryKey: ['profile', userId] });
-      queryClient.invalidateQueries({ queryKey: ['latest-quiz-result', userId] });
+      queryClient.invalidateQueries({ queryKey: ['earned-badges', userId] });
     },
-  });
-}
-
-async function fetchLatestQuizAccuracy(userId: string): Promise<number | null> {
-  const { data, error } = await supabase
-    .from('quiz_sessions')
-    .select('score, total_questions')
-    .eq('user_id', userId)
-    .not('completed_at', 'is', null)
-    .order('completed_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  if (!data || data.total_questions === 0) return null;
-  return data.score / data.total_questions;
-}
-
-// Powers the "Quiz Ace" badge (lib/badges.ts) — deferred until quiz mode existed, per its
-// original comment.
-export function useLatestQuizAccuracyQuery(userId: string | undefined) {
-  return useQuery({
-    queryKey: ['latest-quiz-result', userId],
-    queryFn: () => fetchLatestQuizAccuracy(userId!),
-    enabled: !!userId,
   });
 }

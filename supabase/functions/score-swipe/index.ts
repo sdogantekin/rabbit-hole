@@ -91,6 +91,11 @@ Deno.serve(async (req: Request) => {
         );
     }
 
+    // D14 (gamification.md §5): re-evaluate after every stat-changing write above, not just
+    // likes — streak/XP badges can newly qualify on a skip too.
+    const { error: badgesError } = await supabase.rpc('evaluate_and_award_badges');
+    if (badgesError) console.error('evaluate_and_award_badges failed:', badgesError.message);
+
     return Response.json({ ok: true });
   } catch (err) {
     return Response.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });

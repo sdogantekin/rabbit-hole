@@ -145,9 +145,11 @@ Rules the code enforces:
 - **D11 — Level names.** Recommendation: not yet. Named tiers ("Wanderer", "Scholar") are
   nice but they collide with the badge names already in use (Rising Scholar, Scholar).
   Decide together with the badge set.
-- **D12 — Level-up celebration.** Depends on D14 (memory) — the app has to know the
-  previous level to notice a change. Recommendation: do it once badges are persisted, using
-  the same mechanism.
+- **D12 — Level-up celebration.** Needs the app to know the *previous* level to notice a
+  change — `user_badges` (D14, now done) doesn't carry that by itself, but the same
+  pattern applies: a small persisted "last known level" (e.g. a `profiles.last_seen_level`
+  column, updated by the same functions that call `evaluate_and_award_badges()`) is now a
+  same-shaped, one-migration addition.
 
 ---
 
@@ -155,7 +157,9 @@ Rules the code enforces:
 
 ### As built
 
-Eleven badges, all defined in `lib/badges.ts` and evaluated live on every profile render.
+Eleven badges. `lib/badges.ts` is display-only now (id, label, order) — "earned" is read
+from the `user_badges` table (D14), written by `evaluate_and_award_badges()`
+(`20260919090000_user_badges.sql`), the actual source of truth for the thresholds below.
 Icons are in `constants/badge-icons.ts`.
 
 | Badge | Earned when | Category |
@@ -176,31 +180,46 @@ Rules:
 
 - Every badge is tied to real behaviour; there is deliberately no "opened the app" badge
   (`design.md` §6 and the `CLAUDE.md` guardrail).
-- Because badges are recomputed from current data, **some can be lost**: Quiz Ace is based
-  on the *last* quiz only, and the three streak badges are based on the *current* streak.
-  Break a 7-day streak and Week Streak disappears.
-- Unearned badges are shown dimmed, so the full set is visible as a target.
-- No persistence, no earned-at date, no notification.
+- **Badges are earned forever (D13, D14).** `evaluate_and_award_badges()` runs after every
+  swipe and quiz completion (`score-swipe`, `complete-quiz`, `complete-shared-quiz`, all via
+  the user's own RLS-scoped client) and inserts any newly-qualifying badge into
+  `user_badges`, `on conflict do nothing`. Because it checks the *current* stat right at the
+  moment that stat just changed, a badge earned when `streak_count` first reaches 7 stays
+  earned even if the streak later breaks — the literal D13 suggestion of switching streak
+  badges to `longest_streak` turned out to be unnecessary, since checking "at the moment of
+  change" already has the same effect and only needs one code path. Quiz Ace likewise still
+  reads the *most recent completed* quiz's accuracy, but "most recent" at the exact instant
+  a quiz is completed is that quiz — D13's "any quiz ≥ 80%" wording and this behave
+  identically. Its "with 5+ questions" qualifier is already structurally guaranteed:
+  `MIN_LIKES_TO_UNLOCK_QUIZ = 5` means no quiz can ever have fewer than 5 questions.
+- **Security: badges can't be self-awarded.** `user_badges` has no insert/update/delete
+  policy for the authenticated role — a blanket "owner can insert" policy would let a
+  modified client `POST /user_badges` any badge id directly, since RLS only checks *who*,
+  not *whether the condition is actually true*. `evaluate_and_award_badges()` is `security
+  definer` (bypasses RLS for its own insert) but takes no `user_id` parameter — it reads
+  `auth.uid()` internally, so it can only ever award the caller's own account. Verified
+  against the live project: a second authenticated user can neither insert an arbitrary
+  badge for themselves nor read another user's `user_badges` rows.
+- The thresholds live in exactly one place now (the SQL function) — `lib/badges.ts` keeps
+  only id/label/order for the profile's badge shelf display, no logic.
+- Unearned badges are still shown dimmed, so the full set is visible as a target.
 
 ### Open decisions
 
-- **D13 — Badges that can be un-earned.** This is the most confusing current behaviour: a
-  badge is normally a permanent achievement. Recommendation: badges are **earned forever**
-  once the condition is met. Make streak badges "reached a streak of N" (use
-  `longest_streak`, not `streak_count`) and Quiz Ace "scored ≥ 80% on any quiz with 5+
-  questions". This is a one-line change per badge but only becomes fully correct with D14.
-- **D14 — Persist earned badges.** `requirements.md` puts the "badges/achievements system"
-  in v2, and the code comment in `lib/badges.ts` anticipates a `user_badges` table.
-  Recommendation: add `user_badges (user_id, badge_id, earned_at)`, written by the Edge
-  Functions that change the underlying stats (`score-swipe`, `complete-quiz`). The client
-  still evaluates `isEarned` for display of unearned targets, but "earned" comes from the
-  table. This unlocks D12, D15, and un-losable badges (D13) in one move.
-- **D15 — Celebrate on earn.** Recommendation: once D14 exists, a small bottom sheet after
-  the action that earned it ("New badge: Week Streak"), never a blocking modal mid-swipe.
+- **D13 — Badges that can be un-earned. Done**, as a side effect of D14 — see "as built"
+  above for why the literal per-badge tweaks weren't needed.
+- **D14 — Persist earned badges. Done.** `user_badges (user_id, badge_id, earned_at)`,
+  written only by `evaluate_and_award_badges()`. The client no longer evaluates any
+  `isEarned` logic at all — see "as built" above; this was simpler than keeping a client-side
+  "unearned target" computation in sync with the server's, and nothing needed it.
+- **D15 — Celebrate on earn.** Now unblocked by D14. Recommendation unchanged: a small
+  bottom sheet after the action that earned it ("New badge: Week Streak"), never a blocking
+  modal mid-swipe.
 - **D16 — Fill the gaps in the set.** There's no badge for sharing, playing others' quizzes,
   or beating someone. Recommendation: add three, all behaviour-based — **Host** (someone
   else played your shared quiz), **Challenger** (played 5 shared quizzes), **Perfect Run**
-  (100% on a 10-question quiz). Wait for D14 so they're persisted from day one.
+  (100% on a 10-question quiz). D14 is done, so these can now be added directly to
+  `evaluate_and_award_badges()` plus a `BADGE_ICONS`/`BADGE_DEFINITIONS` entry each.
 
 ---
 
@@ -392,11 +411,11 @@ decided.
 | D9 | Level curve | Linear for launch, thresholds in one constant | XS |
 | D10 | XP progress bar to next level | **Done** | S |
 | D11 | Level names | Not yet | — |
-| D12 | Level-up celebration | After D14 | S |
-| D13 | Badges can't be un-earned | Yes (use longest_streak; "any quiz ≥ 80%") | S |
-| D14 | Persist earned badges (`user_badges`) | Yes — enables D12/D13/D15/D16 | M |
-| D15 | Badge-earned bottom sheet | After D14 | S |
-| D16 | New badges: Host, Challenger, Perfect Run | After D14 | S |
+| D12 | Level-up celebration | Buildable now (same pattern as D14) | S |
+| D13 | Badges can't be un-earned | **Done** (via D14) | S |
+| D14 | Persist earned badges (`user_badges`) | **Done** | M |
+| D15 | Badge-earned bottom sheet | Buildable now | S |
+| D16 | New badges: Host, Challenger, Perfect Run | Buildable now | S |
 | D17 | Free-tier quiz cap | Not until premium exists | — |
 | D18 | Widen reshuffle pool to 30 likes | Yes | S |
 | D19 | = D6 | | |
@@ -407,10 +426,10 @@ decided.
 | D24 | Friends / social graph | Not for launch | — |
 | D25 | Notify owner on play | v2 with push | — |
 
-Suggested order if all recommendations are accepted: **D21, D22** (they gate whether
-sharing works for real users at all) → **D5, D6, D7, D10** (small, fix visible rough edges)
-→ **D14 then D13/D15/D16/D12** (one coherent "badges have memory" change) → **D2, D3, D4,
-D18** (tuning, best done once there's some usage data).
+Suggested order if all recommendations are accepted: ~~D21, D22~~ (done) → ~~D5, D6, D7,
+D10~~ (done) → ~~D14~~ (done, and D13 for free with it) → **D15, D16, D12** (same
+"badges/levels have memory" mechanism, now unblocked) → **D2, D3, D4, D18** (tuning, best
+done once there's some usage data).
 
 ---
 
