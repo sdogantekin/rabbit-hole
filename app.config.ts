@@ -31,6 +31,21 @@ const config: ExpoConfig = {
       backgroundColor: '#BDC9B7',
       foregroundImage: './assets/android-icon-foreground.png',
     },
+    // Android App Links for quiz share links. autoVerify makes Android fetch
+    // https://sdogantekin.github.io/.well-known/assetlinks.json at install time and, if this
+    // package + its signing fingerprint are listed there, open these URLs directly in the app
+    // with no disambiguation dialog. Without verification these would just open the browser.
+    //
+    // The host/path pair must stay in sync with SHARED_QUIZ_LINK_* in constants/quiz.ts;
+    // app/+native-intent.ts is what turns the matched URL into the /shared-quiz/[id] route.
+    intentFilters: [
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        category: ['BROWSABLE', 'DEFAULT'],
+        data: [{ scheme: 'https', host: 'sdogantekin.github.io', pathPrefix: '/rabbit-hole/q' }],
+      },
+    ],
   },
   web: {
     favicon: './assets/favicon.png',

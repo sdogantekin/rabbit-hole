@@ -16,3 +16,16 @@ export const MAX_QUESTIONS_PER_QUIZ = 10;
 
 // design.md §6: "larger amount per correct quiz answer" than per-swipe XP (not yet built).
 export const QUIZ_XP_PER_CORRECT_ANSWER = 15;
+
+// Share links are https (not the rabbithole:// scheme) so they still do something useful for
+// a recipient without the app installed — an Android App Link opens the app directly when it
+// is installed, and falls through to docs/q/index.html (a "get the app" page) when it isn't.
+// A bare custom-scheme link is simply dead for that person, which defeats sharing as a growth
+// mechanic (gamification.md D21).
+//
+// The id travels as a query param rather than a path segment because GitHub Pages is static:
+// it cannot serve a page per quiz id. app/+native-intent.ts rewrites the incoming URL back to
+// the /shared-quiz/[id] route, and app.config.ts's intentFilters must keep matching this path.
+export const SHARED_QUIZ_LINK_PATH = '/rabbit-hole/q';
+export const SHARED_QUIZ_LINK_HOST = 'sdogantekin.github.io';
+export const SHARED_QUIZ_LINK_BASE = `https://${SHARED_QUIZ_LINK_HOST}${SHARED_QUIZ_LINK_PATH}/`;

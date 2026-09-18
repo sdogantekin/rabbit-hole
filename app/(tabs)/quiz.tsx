@@ -1,4 +1,3 @@
-import * as Linking from 'expo-linking';
 import { useState } from 'react';
 import { Pressable, ScrollView, Share, Text, View } from 'react-native';
 
@@ -6,7 +5,7 @@ import { LeaderboardSheet } from '@/components/quiz/LeaderboardSheet';
 import { QuizHomeCard } from '@/components/quiz/QuizHomeCard';
 import { QuizQuestionCard } from '@/components/quiz/QuizQuestionCard';
 import { QuizSummaryCard } from '@/components/quiz/QuizSummaryCard';
-import { MIN_LIKES_TO_UNLOCK_QUIZ } from '@/constants/quiz';
+import { MIN_LIKES_TO_UNLOCK_QUIZ, SHARED_QUIZ_LINK_BASE } from '@/constants/quiz';
 import { colors, fonts } from '@/constants/theme';
 import { t } from '@/lib/localization';
 import { useAuthStore } from '@/lib/store/auth-store';
@@ -89,7 +88,7 @@ export default function Quiz() {
     if (!quizSessionId) return;
     shareQuiz.mutate(quizSessionId, {
       onSuccess: async ({ sharedQuizId }) => {
-        const url = Linking.createURL(`/shared-quiz/${sharedQuizId}`);
+        const url = `${SHARED_QUIZ_LINK_BASE}?id=${sharedQuizId}`;
         const message = t('quiz.shareMessage', {
           score: result?.score ?? 0,
           total: result?.totalQuestions ?? 0,

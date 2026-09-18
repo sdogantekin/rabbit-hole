@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A RabbitHole quiz challenge</title>
+
+<!-- Shown when the link is pasted into WhatsApp/Telegram/etc. These are static rather than
+     per-quiz because the page is on static hosting and the quiz id only arrives as a query
+     param at render time — a crawler fetching the URL never runs our JS. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Can you beat my RabbitHole quiz?">
+<meta property="og:description" content="Someone challenged you to a quiz built from the Wikipedia articles they found interesting. Tap to play.">
+<meta property="og:image" content="https://sdogantekin.github.io/rabbit-hole/q/icon.jpg">
+<meta name="twitter:card" content="summary">
+
+<style>
+  :root {
+    /* Sampled from constants/theme.ts so the page matches the app it hands off to. */
+    --bg: #fcf3ed;
+    --ink: #1e1a16;
+    --accent: #298646;
+    --muted: #6b6259;
+    --border: #e3d9d0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    text-align: center;
+  }
+  .mark {
+    width: 64px; height: 64px; border-radius: 50%;
+    border: 2px solid var(--ink);
+    display: grid; place-items: center;
+    margin-bottom: 10px;
+  }
+  .mark-inner {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 2px solid var(--ink);
+    display: grid; place-items: center;
+  }
+  .mark-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  h1 { font-size: 1.5rem; font-weight: 600; margin: 0; line-height: 1.3; max-width: 22ch; }
+  p { color: var(--muted); margin: 0; font-size: 0.95rem; line-height: 1.5; max-width: 32ch; }
+  .actions { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 300px; margin-top: 20px; }
+  a.btn {
+    display: block; padding: 15px 20px; border-radius: 14px;
+    font-size: 0.95rem; font-weight: 600; text-decoration: none;
+  }
+  a.primary { background: var(--accent); color: #fff; }
+  a.secondary { background: transparent; color: var(--ink); border: 1.5px solid var(--border); }
+  footer { margin-top: 28px; font-size: 0.75rem; color: var(--muted); }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+
+<div class="mark"><div class="mark-inner"><div class="mark-dot"></div></div></div>
+
+<h1>Someone challenged you to a quiz</h1>
+<p>It was built from the Wikipedia articles they actually found interesting. Beat their score.</p>
+
+<div class="actions">
+  <!-- href is filled in by script below once we have the id; hidden until then so a visitor
+       never sees a button that would open the app to nothing. -->
+  <a class="btn primary" id="open" hidden>Open in RabbitHole</a>
+  <a class="btn secondary" href="https://play.google.com/store/apps/details?id=com.sdogantekin.rabbithole">Get RabbitHole on Google Play</a>
+</div>
+
+<footer>Article content via <a href="https://en.wikipedia.org">Wikipedia</a>, CC BY-SA</footer>
+
+<script>
+  // With Android App Links verified (see .well-known/assetlinks.json on this domain), an
+  // installed app intercepts this URL before the page is ever fetched — so reaching this
+  // page usually means the app is NOT installed. The button is kept for the cases that slip
+  // through: verification pending just after install, desktop browsers, and iOS later.
+  var id = new URLSearchParams(location.search).get('id');
+  if (id && /^[0-9a-fA-F-]{36}$/.test(id)) {
+    var open = document.getElementById('open');
+    open.href = 'rabbithole://shared-quiz/' + id;
+    open.hidden = false;
+  }
+</script>
+
+</body>
+</html>
