@@ -50,22 +50,23 @@ const config: ExpoConfig = {
     [
       'expo-splash-screen',
       {
-        // An image is required here even though we don't want a custom native splash look:
+        // An image is required here even though we don't want a distinct native splash look:
         // the plugin's styles.xml writer (withAndroidSplashStyles.js) unconditionally points
         // windowSplashScreenAnimatedIcon at @drawable/splashscreen_logo, but only generates
         // that drawable (withAndroidSplashImages.js) when `image` is set — omitting it left
         // a dangling resource reference and broke the Gradle build
         // (processReleaseResources: "resource drawable/splashscreen_logo ... not found").
-        // Using the adaptive icon's own foreground + background keeps this forced,
-        // OS-controlled icon phase (Android 12+ shows one regardless of config) consistent
-        // with the real app icon rather than looking broken. imageWidth is kept well under
-        // the plugin's ~288dp compositing ceiling (see git history on this file — exceeding
-        // it silently clips instead of scaling up). The real branded moment is
-        // components/app-shell/SplashScreenMimic.tsx, shown immediately after this native
-        // phase hides.
-        image: './assets/android-icon-foreground.png',
-        imageWidth: 172,
-        backgroundColor: '#BDC9B7',
+        //
+        // assets/splash-mark.png is a static render of the exact ring+dot glyph
+        // SplashScreenMimic.tsx draws (see the script in git history on this file), on the
+        // app's own cream background rather than the adaptive icon's sage one. Android 12+
+        // forces this OS-controlled icon phase regardless of config; matching its look to
+        // SplashScreenMimic's static ring (which no longer animates — only the wordmark
+        // fades in beneath it) makes the native phase read as the first frame of one
+        // continuous screen instead of a second, visually distinct splash.
+        image: './assets/splash-mark.png',
+        imageWidth: 80,
+        backgroundColor: '#fcf3ed',
       },
     ],
     [

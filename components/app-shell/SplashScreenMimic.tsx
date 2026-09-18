@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { colors, fonts } from '@/constants/theme';
@@ -11,21 +11,27 @@ import { t } from '@/lib/localization';
 // changes on each handoff is content, not a jarring color swap. See app/_layout.tsx for why
 // this exists at all (Android's splash mechanisms can't render a real full-bleed image) and
 // for MIN_SPLASH_DURATION_MS, which this animation is timed to finish alongside.
+//
+// The ring+dot mark itself is static, not animated: assets/splash-mark.png (a rendering of
+// this exact same glyph, on the same background — see app.config.ts) is already on screen
+// during Android's native splash phase, which this component takes over from the instant
+// fonts finish loading. Animating the mark here would make it flash (visible -> invisible ->
+// fading back in) at that handoff. Only the wordmark, which the native phase never shows,
+// fades in — so the two phases read as one continuous screen.
 export function SplashScreenMimic() {
-  const progress = useSharedValue(0);
+  const wordmarkOpacity = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = withTiming(1, { duration: 500 });
-  }, [progress]);
+    wordmarkOpacity.value = withTiming(1, { duration: 400 });
+  }, [wordmarkOpacity]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: progress.value,
-    transform: [{ scale: 0.92 + progress.value * 0.08 }],
+  const wordmarkStyle = useAnimatedStyle(() => ({
+    opacity: wordmarkOpacity.value,
   }));
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.appBackground, alignItems: 'center', justifyContent: 'center' }}>
-      <Animated.View style={[{ alignItems: 'center', gap: 18 }, animatedStyle]}>
+      <View style={{ alignItems: 'center', gap: 18 }}>
         <View
           style={{
             width: 64,
@@ -52,10 +58,15 @@ export function SplashScreenMimic() {
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accent }} />
           </View>
         </View>
-        <Text style={{ fontFamily: fonts.serif, fontSize: 34, letterSpacing: -0.5, color: colors.ink }}>
+        <Animated.Text
+          style={[
+            { fontFamily: fonts.serif, fontSize: 34, letterSpacing: -0.5, color: colors.ink },
+            wordmarkStyle,
+          ]}
+        >
           {t('onboarding.intro.title')}
-        </Text>
-      </Animated.View>
+        </Animated.Text>
+      </View>
     </View>
   );
 }
