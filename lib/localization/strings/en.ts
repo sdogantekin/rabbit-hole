@@ -136,6 +136,7 @@ export const en = {
     noSaved: "Nothing liked yet — swipe right on a card you're into.",
     editInterestsCta: 'Edit interests',
     privacyCta: 'Privacy & consent',
+    aboutCta: 'About',
     avatar: {
       title: 'Profile photo',
       takePhoto: 'Take photo',
@@ -167,5 +168,16 @@ export const en = {
     deleteAccountConfirmCta: 'Delete',
     deleteAccountCancelCta: 'Cancel',
     deleteAccountError: "Couldn't delete your account. Please try again.",
+  },
+  about: {
+    title: 'About',
+    backCta: 'Back',
+    versionLabel: 'Version',
+    buildLabel: 'Build',
+    contentTitle: 'Content',
+    contentBody:
+      "Article content is sourced from Wikipedia and licensed under Creative Commons. RabbitHole is not affiliated with or endorsed by the Wikimedia Foundation.",
+    legalTitle: 'Legal',
+    privacyPolicyCta: 'Privacy policy',
   },
 } as const;

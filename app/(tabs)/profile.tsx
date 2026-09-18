@@ -175,8 +175,12 @@ export default function Profile() {
           <Text style={styles.linkText}>{t('profile.editInterestsCta')}</Text>
           <Text style={styles.chevron}>›</Text>
         </Pressable>
-        <Pressable onPress={() => router.push('/profile/privacy')} style={[styles.linkRow, { borderBottomWidth: 0 }]}>
+        <Pressable onPress={() => router.push('/profile/privacy')} style={styles.linkRow}>
           <Text style={styles.linkText}>{t('profile.privacyCta')}</Text>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push('/profile/about')} style={[styles.linkRow, { borderBottomWidth: 0 }]}>
+          <Text style={styles.linkText}>{t('profile.aboutCta')}</Text>
           <Text style={styles.chevron}>›</Text>
         </Pressable>
       </View>
