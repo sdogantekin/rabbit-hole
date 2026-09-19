@@ -6,8 +6,9 @@
 // supabase/migrations/20260909090000_swipe_streak_xp.sql,
 // supabase/migrations/20260918230000_daily_activity_local_day.sql,
 // supabase/migrations/20260919090000_user_badges.sql,
-// supabase/migrations/20260919120000_new_badges_and_celebration.sql, and
-// supabase/migrations/20260919130000_level_up_celebration.sql.
+// supabase/migrations/20260919120000_new_badges_and_celebration.sql,
+// supabase/migrations/20260919130000_level_up_celebration.sql, and
+// supabase/migrations/20260919140000_user_interests_selected_flag.sql.
 // Replace with `supabase gen types typescript` output once the schema stabilizes.
 export interface Database {
   public: {
@@ -51,11 +52,13 @@ export interface Database {
           category_id: string;
           weight: number;
           created_at: string;
+          selected: boolean;
         };
         Insert: {
           user_id: string;
           category_id: string;
           weight?: number;
+          selected?: boolean;
         };
         Update: Partial<Database['public']['Tables']['user_interests']['Row']>;
         Relationships: [];

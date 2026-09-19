@@ -165,6 +165,7 @@ export const en = {
   editInterests: {
     title: 'Edit interests',
     saveCta: 'Save',
+    loading: 'Loading your interests…',
   },
   likedArticles: {
     title: 'Liked articles',

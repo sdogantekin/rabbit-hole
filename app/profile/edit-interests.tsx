@@ -11,7 +11,7 @@ export default function EditInterests() {
   const router = useRouter();
   const session = useAuthStore((s) => s.session);
   const userId = session?.user.id;
-  const { data: currentSlugs = [] } = useServerInterestsQuery(userId);
+  const { data: currentSlugs, isLoading } = useServerInterestsQuery(userId);
   const saveInterests = useSaveInterestsMutation(userId);
 
   const handleSubmit = async (slugs: string[]) => {
@@ -26,11 +26,20 @@ export default function EditInterests() {
       >
         {t('editInterests.title')}
       </Text>
-      <InterestSelectionForm
-        initialSelected={currentSlugs}
-        onSubmit={handleSubmit}
-        submitLabel={t('editInterests.saveCta')}
-      />
+      {isLoading || !currentSlugs ? (
+        // InterestSelectionForm captures its selection into useState once, at mount — it
+        // must not mount before the real server list has arrived, or it freezes on an empty
+        // selection and hitting Save would wipe every category the user actually has.
+        <Text style={{ fontFamily: fonts.sans, fontSize: 14, color: colors.inkMuted, paddingHorizontal: 24 }}>
+          {t('editInterests.loading')}
+        </Text>
+      ) : (
+        <InterestSelectionForm
+          initialSelected={currentSlugs}
+          onSubmit={handleSubmit}
+          submitLabel={t('editInterests.saveCta')}
+        />
+      )}
     </View>
   );
 }
