@@ -13,9 +13,10 @@ export interface InterestCategory {
 export const MIN_INTEREST_SELECTION = 3;
 
 // Curated, not auto-generated from raw Wikipedia categories (see CLAUDE.md).
-// Keep this in sync with supabase/migrations/20260904232051_init_onboarding_schema.sql.
+// Keep this in sync with supabase/migrations/20260904232051_init_onboarding_schema.sql and
+// supabase/migrations/20260918120000_add_interest_categories.sql.
 // Hues are recomputed evenly across the full list any time a category is added or removed
-// (currently 360/14 ≈ 26° apart) — not appended ad hoc — to keep the accent/tint spread even.
+// (currently 360/18 = 20° apart) — not appended ad hoc — to keep the accent/tint spread even.
 export const INTEREST_CATEGORIES: InterestCategory[] = [
   {
     id: 'science',
@@ -31,7 +32,7 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     label: 'History',
     icon: 'time-outline',
     wikipediaCategorySeed: 'Category:History',
-    hue: 26,
+    hue: 20,
   },
   {
     id: 'arts-literature',
@@ -39,7 +40,7 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     label: 'Arts & Literature',
     icon: 'color-palette-outline',
     wikipediaCategorySeed: 'Category:The arts',
-    hue: 51,
+    hue: 40,
   },
   {
     id: 'technology',
@@ -47,7 +48,7 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     label: 'Technology',
     icon: 'hardware-chip-outline',
     wikipediaCategorySeed: 'Category:Technology',
-    hue: 77,
+    hue: 60,
   },
   {
     id: 'space',
@@ -55,7 +56,7 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     label: 'Space & Astronomy',
     icon: 'planet-outline',
     wikipediaCategorySeed: 'Category:Astronomy',
-    hue: 103,
+    hue: 80,
   },
   {
     id: 'nature',
@@ -63,7 +64,7 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     label: 'Nature & Wildlife',
     icon: 'leaf-outline',
     wikipediaCategorySeed: 'Category:Nature',
-    hue: 129,
+    hue: 100,
   },
   {
     id: 'geography',
@@ -71,7 +72,7 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     label: 'Geography & Places',
     icon: 'earth-outline',
     wikipediaCategorySeed: 'Category:Geography',
-    hue: 154,
+    hue: 120,
   },
   {
     id: 'philosophy',
@@ -79,7 +80,15 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     label: 'Philosophy',
     icon: 'bulb-outline',
     wikipediaCategorySeed: 'Category:Philosophy',
-    hue: 180,
+    hue: 140,
+  },
+  {
+    id: 'anthropology',
+    slug: 'anthropology',
+    label: 'Anthropology',
+    icon: 'people-outline',
+    wikipediaCategorySeed: 'Category:Anthropology',
+    hue: 160,
   },
   {
     id: 'mythology',
@@ -87,7 +96,15 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     label: 'Mythology & Folklore',
     icon: 'flame-outline',
     wikipediaCategorySeed: 'Category:Mythology',
-    hue: 206,
+    hue: 180,
+  },
+  {
+    id: 'urban-legends',
+    slug: 'urban-legends',
+    label: 'Urban Legends',
+    icon: 'moon-outline',
+    wikipediaCategorySeed: 'Category:Urban legends',
+    hue: 200,
   },
   {
     id: 'music',
@@ -95,7 +112,7 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     label: 'Music',
     icon: 'musical-notes-outline',
     wikipediaCategorySeed: 'Category:Music',
-    hue: 231,
+    hue: 220,
   },
   {
     id: 'sports',
@@ -103,7 +120,7 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     label: 'Sports',
     icon: 'football-outline',
     wikipediaCategorySeed: 'Category:Sports',
-    hue: 257,
+    hue: 240,
   },
   {
     id: 'film-television',
@@ -111,7 +128,23 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     label: 'Film & Television',
     icon: 'film-outline',
     wikipediaCategorySeed: 'Category:Film',
-    hue: 283,
+    hue: 260,
+  },
+  {
+    id: 'science-fiction',
+    slug: 'science-fiction',
+    label: 'Science Fiction',
+    icon: 'rocket-outline',
+    wikipediaCategorySeed: 'Category:Science fiction',
+    hue: 280,
+  },
+  {
+    id: 'pop-culture',
+    slug: 'pop-culture',
+    label: 'Pop Culture',
+    icon: 'sparkles-outline',
+    wikipediaCategorySeed: 'Category:Popular culture',
+    hue: 300,
   },
   {
     id: 'food-drink',
@@ -119,7 +152,7 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     label: 'Food & Drink',
     icon: 'restaurant-outline',
     wikipediaCategorySeed: 'Category:Food and drink',
-    hue: 309,
+    hue: 320,
   },
   {
     id: 'health-medicine',
@@ -127,6 +160,6 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     label: 'Health & Medicine',
     icon: 'medkit-outline',
     wikipediaCategorySeed: 'Category:Medicine',
-    hue: 334,
+    hue: 340,
   },
 ];

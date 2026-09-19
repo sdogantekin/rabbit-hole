@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { InterestGrid } from '@/components/interests/InterestGrid';
 import { MIN_INTEREST_SELECTION } from '@/constants/interest-categories';
@@ -47,8 +47,13 @@ export function InterestSelectionForm({
       <Text style={{ fontFamily: fonts.sans, fontSize: 14, color: colors.inkSecondary, marginBottom: 20 }}>
         {t('onboarding.interests.body', { min: minRequired })}
       </Text>
-      <InterestGrid selected={selected} onToggle={toggle} />
-      <View style={{ marginTop: 20, gap: 12 }}>
+      {/* The category list has grown since this was first built (18 now, more later) — it
+          no longer reliably fits one screen, so only the grid scrolls; the count and CTA
+          below stay pinned and reachable regardless of how many categories there are. */}
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 4 }} showsVerticalScrollIndicator={false}>
+        <InterestGrid selected={selected} onToggle={toggle} />
+      </ScrollView>
+      <View style={{ marginTop: 16, gap: 12 }}>
         <Text style={{ fontFamily: fonts.sans, fontSize: 13, color: colors.inkSecondary, textAlign: 'center' }}>
           {t('onboarding.interests.selectedCount', { count: selected.length })}
           {selected.length < minRequired
