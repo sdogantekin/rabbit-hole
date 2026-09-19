@@ -157,10 +157,13 @@ Rules the code enforces:
 
 ### As built
 
-Eleven badges. `lib/badges.ts` is display-only now (id, label, order) — "earned" is read
+Fourteen badges. `lib/badges.ts` is display-only now (id, label, order) — "earned" is read
 from the `user_badges` table (D14), written by `evaluate_and_award_badges()`
-(`20260919090000_user_badges.sql`), the actual source of truth for the thresholds below.
-Icons are in `constants/badge-icons.ts`.
+(`20260919090000_user_badges.sql`, extended in `20260919120000_new_badges_and_celebration.sql`
+for D15/D16), the actual source of truth for the thresholds below. Icons are in
+`constants/badge-icons.ts`; Host/Challenger/Perfect Run don't have hand-drawn art yet
+(deliberately not blocked on it) and fall back to a generic Ionicons glyph in both the
+profile badge shelf and the earned-badge sheet.
 
 | Badge | Earned when | Category |
 |---|---|---|
@@ -175,6 +178,9 @@ Icons are in `constants/badge-icons.ts`.
 | Month Streak | streak ≥ 30 days | streak |
 | Rising Scholar | XP ≥ 100 | XP |
 | Scholar | XP ≥ 500 | XP |
+| Host (D16) | someone else played a quiz you shared | social |
+| Challenger (D16) | played 5 shared quizzes owned by other people | social |
+| Perfect Run (D16) | 100% on a 10-question quiz, own or shared | quiz |
 
 Rules:
 
@@ -203,6 +209,14 @@ Rules:
 - The thresholds live in exactly one place now (the SQL function) — `lib/badges.ts` keeps
   only id/label/order for the profile's badge shelf display, no logic.
 - Unearned badges are still shown dimmed, so the full set is visible as a target.
+- **Host and Challenger both exclude the owner's own seeded play row.** `share-quiz` inserts
+  a `quiz_plays` row for the owner so their score always appears on their own leaderboard
+  (design.md-adjacent behaviour from before D16 existed) — without excluding it, sharing a
+  quiz would instantly (and wrongly) count as "someone played it" for Host, and playing your
+  own shared quizzes would silently count toward Challenger.
+- **Perfect Run counts either source** (`quiz_sessions` for your own quizzes, `quiz_plays`
+  for shared ones you played) — a full 10-question quiz aced is the same accomplishment
+  either way; nothing in the doc's wording restricted it to one.
 
 ### Open decisions
 
@@ -212,14 +226,16 @@ Rules:
   written only by `evaluate_and_award_badges()`. The client no longer evaluates any
   `isEarned` logic at all — see "as built" above; this was simpler than keeping a client-side
   "unearned target" computation in sync with the server's, and nothing needed it.
-- **D15 — Celebrate on earn.** Now unblocked by D14. Recommendation unchanged: a small
-  bottom sheet after the action that earned it ("New badge: Week Streak"), never a blocking
-  modal mid-swipe.
-- **D16 — Fill the gaps in the set.** There's no badge for sharing, playing others' quizzes,
-  or beating someone. Recommendation: add three, all behaviour-based — **Host** (someone
-  else played your shared quiz), **Challenger** (played 5 shared quizzes), **Perfect Run**
-  (100% on a 10-question quiz). D14 is done, so these can now be added directly to
-  `evaluate_and_award_badges()` plus a `BADGE_ICONS`/`BADGE_DEFINITIONS` entry each.
+- **D15 — Celebrate on earn. Done.** `evaluate_and_award_badges()` now returns the ids it
+  actually just inserted (`insert ... on conflict do nothing returning ...` — a badge already
+  earned before this call never comes back), which `score-swipe`/`complete-quiz`/
+  `complete-shared-quiz` forward to the client as `newlyEarnedBadges`. A small global
+  zustand store (`lib/store/badge-celebration-store.ts`) + one `<BadgeEarnedSheet/>` mounted
+  in `app/_layout.tsx` means Feed, Quiz, and shared-quiz-play don't each need their own copy
+  of this UI — whichever mutation succeeds just calls `announce(newlyEarnedBadges)`.
+- **D16 — Fill the gaps in the set. Done.** Host, Challenger, Perfect Run — see the table
+  above. No new artwork yet (see "as built"); the SQL conditions are the real work and are
+  done regardless of icon status.
 
 ---
 
@@ -414,8 +430,8 @@ decided.
 | D12 | Level-up celebration | Buildable now (same pattern as D14) | S |
 | D13 | Badges can't be un-earned | **Done** (via D14) | S |
 | D14 | Persist earned badges (`user_badges`) | **Done** | M |
-| D15 | Badge-earned bottom sheet | Buildable now | S |
-| D16 | New badges: Host, Challenger, Perfect Run | Buildable now | S |
+| D15 | Badge-earned bottom sheet | **Done** | S |
+| D16 | New badges: Host, Challenger, Perfect Run | **Done** | S |
 | D17 | Free-tier quiz cap | Not until premium exists | — |
 | D18 | Widen reshuffle pool to 30 likes | Yes | S |
 | D19 | = D6 | | |
@@ -427,9 +443,9 @@ decided.
 | D25 | Notify owner on play | v2 with push | — |
 
 Suggested order if all recommendations are accepted: ~~D21, D22~~ (done) → ~~D5, D6, D7,
-D10~~ (done) → ~~D14~~ (done, and D13 for free with it) → **D15, D16, D12** (same
-"badges/levels have memory" mechanism, now unblocked) → **D2, D3, D4, D18** (tuning, best
-done once there's some usage data).
+D10~~ (done) → ~~D14~~ (done, and D13 for free with it) → ~~D15, D16~~ (done) → **D12**
+(same mechanism, still open) → **D2, D3, D4, D18** (tuning, best done once there's some
+usage data).
 
 ---
 

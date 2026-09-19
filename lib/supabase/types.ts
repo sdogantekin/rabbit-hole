@@ -4,8 +4,9 @@
 // supabase/migrations/20260907090000_quiz_schema.sql,
 // supabase/migrations/20260907160000_quiz_sharing_schema.sql,
 // supabase/migrations/20260909090000_swipe_streak_xp.sql,
-// supabase/migrations/20260918230000_daily_activity_local_day.sql, and
-// supabase/migrations/20260919090000_user_badges.sql.
+// supabase/migrations/20260918230000_daily_activity_local_day.sql,
+// supabase/migrations/20260919090000_user_badges.sql, and
+// supabase/migrations/20260919120000_new_badges_and_celebration.sql.
 // Replace with `supabase gen types typescript` output once the schema stabilizes.
 export interface Database {
   public: {
@@ -248,7 +249,7 @@ export interface Database {
       };
       evaluate_and_award_badges: {
         Args: Record<PropertyKey, never>;
-        Returns: undefined;
+        Returns: { awarded_badge_id: string }[];
       };
     };
   };

@@ -20,6 +20,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { SplashScreenMimic } from '@/components/app-shell/SplashScreenMimic';
+import { BadgeEarnedSheet } from '@/components/gamification/BadgeEarnedSheet';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/lib/store/auth-store';
 
@@ -88,6 +89,7 @@ export default function RootLayout() {
             <Stack.Screen name="(onboarding)" />
             <Stack.Screen name="(tabs)" />
           </Stack>
+          <BadgeEarnedSheet />
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

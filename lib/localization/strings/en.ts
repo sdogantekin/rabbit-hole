@@ -124,6 +124,13 @@ export const en = {
       monthStreak: 'Month Streak',
       risingScholar: 'Rising Scholar',
       scholar: 'Scholar',
+      host: 'Host',
+      challenger: 'Challenger',
+      perfectRun: 'Perfect Run',
+    },
+    badgeEarned: {
+      title: 'New badge!',
+      cta: 'Nice',
     },
     weightsTitle: 'Interest weights — why you see what you see',
     savedTitle: 'Liked articles',

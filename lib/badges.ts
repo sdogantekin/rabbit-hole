@@ -23,4 +23,7 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
   { id: 'month-streak', labelKey: 'profile.badges.monthStreak' },
   { id: 'rising-scholar', labelKey: 'profile.badges.risingScholar' },
   { id: 'scholar', labelKey: 'profile.badges.scholar' },
+  { id: 'host', labelKey: 'profile.badges.host' },
+  { id: 'challenger', labelKey: 'profile.badges.challenger' },
+  { id: 'perfect-run', labelKey: 'profile.badges.perfectRun' },
 ];

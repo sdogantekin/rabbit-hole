@@ -178,11 +178,19 @@ export default function Profile() {
                   { backgroundColor: b.earned ? colors.badgeEarnedBg : colors.badgeUnearnedBg },
                 ]}
               >
-                <Image
-                  source={BADGE_ICONS[b.id]}
-                  style={[styles.badgeIcon, { opacity: b.earned ? 1 : 0.35 }]}
-                  resizeMode="contain"
-                />
+                {BADGE_ICONS[b.id] ? (
+                  <Image
+                    source={BADGE_ICONS[b.id]}
+                    style={[styles.badgeIcon, { opacity: b.earned ? 1 : 0.35 }]}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <Ionicons
+                    name="ribbon-outline"
+                    size={28}
+                    color={b.earned ? colors.ink : colors.inkFaint}
+                  />
+                )}
               </View>
               <Text
                 style={[styles.badgeLabel, { color: b.earned ? colors.ink : colors.inkFaint }]}

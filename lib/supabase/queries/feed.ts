@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase/client';
+import { useBadgeCelebrationStore } from '@/lib/store/badge-celebration-store';
 import { getLocalTimezone } from '@/lib/timezone';
 
 export interface FeedCard {
@@ -28,11 +29,12 @@ async function fetchNextBatch(batchSize: number): Promise<FeedCard[]> {
   return data?.cards ?? [];
 }
 
-async function submitSwipe(input: SubmitSwipeInput): Promise<void> {
-  const { error } = await supabase.functions.invoke('score-swipe', {
+async function submitSwipe(input: SubmitSwipeInput): Promise<{ newlyEarnedBadges: string[] }> {
+  const { data, error } = await supabase.functions.invoke<{ newlyEarnedBadges: string[] }>('score-swipe', {
     body: { ...input, timezone: getLocalTimezone() },
   });
   if (error) throw error;
+  return { newlyEarnedBadges: data?.newlyEarnedBadges ?? [] };
 }
 
 async function fetchArticleFromCache(pageId: number, lang: string) {
@@ -59,11 +61,13 @@ export function useFetchNextBatchMutation() {
 // header's streak/XP badge and the profile's badge shelf pick it up without a manual refresh.
 export function useSubmitSwipeMutation(userId: string | undefined) {
   const queryClient = useQueryClient();
+  const announceBadges = useBadgeCelebrationStore((s) => s.announce);
   return useMutation({
     mutationFn: (input: SubmitSwipeInput) => submitSwipe(input),
-    onSuccess: () => {
+    onSuccess: ({ newlyEarnedBadges }) => {
       queryClient.invalidateQueries({ queryKey: ['profile', userId] });
       queryClient.invalidateQueries({ queryKey: ['earned-badges', userId] });
+      announceBadges(newlyEarnedBadges);
     },
   });
 }
