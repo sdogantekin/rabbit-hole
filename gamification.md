@@ -161,9 +161,9 @@ Fourteen badges. `lib/badges.ts` is display-only now (id, label, order) — "ear
 from the `user_badges` table (D14), written by `evaluate_and_award_badges()`
 (`20260919090000_user_badges.sql`, extended in `20260919120000_new_badges_and_celebration.sql`
 for D15/D16), the actual source of truth for the thresholds below. Icons are in
-`constants/badge-icons.ts`; Host/Challenger/Perfect Run don't have hand-drawn art yet
-(deliberately not blocked on it) and fall back to a generic Ionicons glyph in both the
-profile badge shelf and the earned-badge sheet.
+`constants/badge-icons.ts` (all fourteen now have hand-drawn art; any future badge without
+one falls back to a generic Ionicons glyph in both the profile badge shelf and the
+earned-badge sheet, so art was never a blocker).
 
 | Badge | Earned when | Category |
 |---|---|---|
@@ -234,8 +234,7 @@ Rules:
   in `app/_layout.tsx` means Feed, Quiz, and shared-quiz-play don't each need their own copy
   of this UI — whichever mutation succeeds just calls `announce(newlyEarnedBadges)`.
 - **D16 — Fill the gaps in the set. Done.** Host, Challenger, Perfect Run — see the table
-  above. No new artwork yet (see "as built"); the SQL conditions are the real work and are
-  done regardless of icon status.
+  above, art included (`assets/badges/{host,challenger,perfect-run}.png`).
 
 ---
 

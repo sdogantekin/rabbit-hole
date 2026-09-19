@@ -4,10 +4,8 @@ import type { ImageSourcePropType } from 'react-native';
 // from a badge id wouldn't bundle, hence this explicit id -> asset map (cropped from the
 // hand-drawn reference sheet in assets/badges/, one file per badge).
 //
-// host/challenger/perfect-run (D16, gamification.md §5) don't have hand-drawn art yet —
-// deliberately left out of this map rather than blocked on it; profile.tsx falls back to a
-// generic Ionicons glyph for any badge id missing here. Add real artwork by filling in the
-// entry, no other change needed.
+// Any badge id missing here falls back to a generic Ionicons glyph (see profile.tsx and
+// BadgeEarnedSheet) rather than blocking the feature on artwork.
 export const BADGE_ICONS: Partial<Record<string, ImageSourcePropType>> = {
   'first-like': require('../assets/badges/first-like.png'),
   explorer: require('../assets/badges/explorer.png'),
@@ -20,4 +18,7 @@ export const BADGE_ICONS: Partial<Record<string, ImageSourcePropType>> = {
   'month-streak': require('../assets/badges/month-streak.png'),
   'rising-scholar': require('../assets/badges/rising-scholar.png'),
   scholar: require('../assets/badges/scholar.png'),
+  host: require('../assets/badges/host.png'),
+  challenger: require('../assets/badges/challenger.png'),
+  'perfect-run': require('../assets/badges/perfect-run.png'),
 };
