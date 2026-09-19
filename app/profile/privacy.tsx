@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, Text, View } from 'react-native';
 
 import { colors, fonts } from '@/constants/theme';
 import { t } from '@/lib/localization';
@@ -15,29 +15,22 @@ export default function Privacy() {
   const { data: profile } = useProfileQuery(userId);
   const updateProfile = useUpdateProfileMutation(userId);
   const deleteAccount = useDeleteAccountMutation();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDeleteAccount = () => {
-    Alert.alert(t('privacy.deleteAccountConfirmTitle'), t('privacy.deleteAccountConfirmBody'), [
-      { text: t('privacy.deleteAccountCancelCta'), style: 'cancel' },
-      {
-        text: t('privacy.deleteAccountConfirmCta'),
-        style: 'destructive',
-        onPress: () => {
-          setIsDeleting(true);
-          deleteAccount.mutate(undefined, {
-            onSuccess: async () => {
-              await supabase.auth.signOut();
-              router.replace('/(onboarding)/intro');
-            },
-            onError: () => {
-              setIsDeleting(false);
-              Alert.alert(t('privacy.deleteAccountError'));
-            },
-          });
-        },
+  const handleConfirmDelete = () => {
+    setConfirmOpen(false);
+    setIsDeleting(true);
+    deleteAccount.mutate(undefined, {
+      onSuccess: async () => {
+        await supabase.auth.signOut();
+        router.replace('/(onboarding)/intro');
       },
-    ]);
+      onError: () => {
+        setIsDeleting(false);
+        Alert.alert(t('privacy.deleteAccountError'));
+      },
+    });
   };
 
   return (
@@ -60,27 +53,20 @@ export default function Privacy() {
         />
       </View>
 
-      <View style={{ gap: 8 }}>
-        <Text style={{ fontFamily: fonts.sansBold, fontSize: 12, color: colors.negative }}>
-          {t('privacy.dangerZoneTitle')}
+      <Pressable
+        onPress={() => setConfirmOpen(true)}
+        disabled={isDeleting}
+        style={{
+          padding: 16,
+          borderRadius: 16,
+          backgroundColor: colors.surface,
+          opacity: isDeleting ? 0.6 : 1,
+        }}
+      >
+        <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 14.5, color: colors.negative }}>
+          {t('privacy.deleteAccountCta')}
         </Text>
-        <Pressable
-          onPress={handleDeleteAccount}
-          disabled={isDeleting}
-          style={{
-            padding: 16,
-            borderRadius: 16,
-            borderWidth: 1.5,
-            borderColor: colors.negativeBorder,
-            alignItems: 'center',
-            opacity: isDeleting ? 0.6 : 1,
-          }}
-        >
-          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 14.5, color: colors.negative }}>
-            {t('privacy.deleteAccountCta')}
-          </Text>
-        </Pressable>
-      </View>
+      </Pressable>
 
       <Pressable
         onPress={() => router.back()}
@@ -88,9 +74,55 @@ export default function Privacy() {
       >
         <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: '#fff' }}>{t('privacy.doneCta')}</Text>
       </Pressable>
+
+      <Modal visible={confirmOpen} transparent animationType="slide" onRequestClose={() => setConfirmOpen(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setConfirmOpen(false)}>
+          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.handle} />
+            <Text style={styles.confirmTitle}>{t('privacy.deleteAccountConfirmTitle')}</Text>
+            <Text style={styles.confirmBody}>{t('privacy.deleteAccountConfirmBody')}</Text>
+            <View style={styles.confirmButtonRow}>
+              <Pressable
+                onPress={() => setConfirmOpen(false)}
+                style={[styles.confirmButton, { backgroundColor: colors.neutralWash }]}
+              >
+                <Text style={[styles.confirmButtonText, { color: colors.ink }]}>
+                  {t('privacy.deleteAccountCancelCta')}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={handleConfirmDelete}
+                style={[styles.confirmButton, { backgroundColor: colors.negative }]}
+              >
+                <Text style={[styles.confirmButtonText, { color: '#fff' }]}>
+                  {t('privacy.deleteAccountConfirmCta')}
+                </Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
+
+const styles = {
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' as const },
+  sheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 22,
+    paddingBottom: 40,
+    gap: 14,
+  },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center' as const },
+  confirmTitle: { fontFamily: fonts.serif, fontSize: 19, color: colors.ink },
+  confirmBody: { fontFamily: fonts.sans, fontSize: 13.5, color: colors.inkMuted, lineHeight: 19 },
+  confirmButtonRow: { flexDirection: 'row' as const, gap: 10, marginTop: 4 },
+  confirmButton: { flex: 1, padding: 14, borderRadius: 14, alignItems: 'center' as const },
+  confirmButtonText: { fontFamily: fonts.sansSemiBold, fontSize: 14.5 },
+};
 
 interface ToggleRowProps {
   label: string;
