@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase/client';
 import { useBadgeCelebrationStore } from '@/lib/store/badge-celebration-store';
+import { useLevelUpStore } from '@/lib/store/level-up-store';
 import { getLocalTimezone } from '@/lib/timezone';
 
 import type { QuizAnswerInput, QuizQuestion, QuizResult } from './quiz';
@@ -39,7 +40,7 @@ async function completeSharedQuiz(sharedQuizId: string, answers: QuizAnswerInput
   });
   if (error) throw error;
   if (!data) throw new Error('failed to complete shared quiz');
-  return { ...data, newlyEarnedBadges: data.newlyEarnedBadges ?? [] };
+  return { ...data, newlyEarnedBadges: data.newlyEarnedBadges ?? [], newLevel: data.newLevel ?? null };
 }
 
 export function useSharedQuizQuery(sharedQuizId: string | undefined) {
@@ -64,9 +65,10 @@ export function useShareQuizMutation(userId: string | undefined) {
 export function useCompleteSharedQuizMutation(userId: string | undefined, sharedQuizId: string | undefined) {
   const queryClient = useQueryClient();
   const announceBadges = useBadgeCelebrationStore((s) => s.announce);
+  const announceLevelUp = useLevelUpStore((s) => s.announce);
   return useMutation({
     mutationFn: (answers: QuizAnswerInput[]) => completeSharedQuiz(sharedQuizId!, answers),
-    onSuccess: ({ newlyEarnedBadges }) => {
+    onSuccess: ({ newlyEarnedBadges, newLevel }) => {
       // XP just changed, this quiz's alreadyPlayed/leaderboard state just flipped, and
       // evaluate_and_award_badges may have earned new ones (D14, gamification.md §5).
       queryClient.invalidateQueries({ queryKey: ['profile', userId] });
@@ -75,6 +77,7 @@ export function useCompleteSharedQuizMutation(userId: string | undefined, shared
       queryClient.invalidateQueries({ queryKey: ['shared-quiz-leaderboard', sharedQuizId] });
       queryClient.invalidateQueries({ queryKey: ['played-shared-quizzes', userId] });
       announceBadges(newlyEarnedBadges);
+      announceLevelUp(newLevel);
     },
   });
 }

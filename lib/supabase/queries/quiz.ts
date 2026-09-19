@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase/client';
 import { useBadgeCelebrationStore } from '@/lib/store/badge-celebration-store';
+import { useLevelUpStore } from '@/lib/store/level-up-store';
 import { getLocalTimezone } from '@/lib/timezone';
 
 export interface QuizQuestion {
@@ -29,6 +30,7 @@ export interface QuizResult {
   totalQuestions: number;
   xpAwarded: number;
   newlyEarnedBadges: string[];
+  newLevel: number | null;
 }
 
 // Thrown from generate-quiz when the user hasn't liked enough articles yet — a normal,
@@ -63,7 +65,7 @@ async function completeQuiz(quizSessionId: string, answers: QuizAnswerInput[]): 
   });
   if (error) throw error;
   if (!data) throw new Error('failed to complete quiz');
-  return { ...data, newlyEarnedBadges: data.newlyEarnedBadges ?? [] };
+  return { ...data, newlyEarnedBadges: data.newlyEarnedBadges ?? [], newLevel: data.newLevel ?? null };
 }
 
 // Not idempotent (may create a new quiz_sessions row) and its result depends on ever-growing
@@ -77,15 +79,17 @@ export function useGenerateQuizMutation() {
 export function useCompleteQuizMutation(userId: string | undefined) {
   const queryClient = useQueryClient();
   const announceBadges = useBadgeCelebrationStore((s) => s.announce);
+  const announceLevelUp = useLevelUpStore((s) => s.announce);
   return useMutation({
     mutationFn: ({ quizSessionId, answers }: { quizSessionId: string; answers: QuizAnswerInput[] }) =>
       completeQuiz(quizSessionId, answers),
-    onSuccess: ({ newlyEarnedBadges }) => {
+    onSuccess: ({ newlyEarnedBadges, newLevel }) => {
       // XP/streak just changed server-side, and evaluate_and_award_badges may have earned
       // new ones (D14, gamification.md §5).
       queryClient.invalidateQueries({ queryKey: ['profile', userId] });
       queryClient.invalidateQueries({ queryKey: ['earned-badges', userId] });
       announceBadges(newlyEarnedBadges);
+      announceLevelUp(newLevel);
     },
   });
 }

@@ -132,6 +132,11 @@ export const en = {
       title: 'New badge!',
       cta: 'Nice',
     },
+    levelUp: {
+      title: 'Level up!',
+      body: "You've reached level {{level}}.",
+      cta: 'Nice',
+    },
     weightsTitle: 'Interest weights — why you see what you see',
     savedTitle: 'Liked articles',
     seeAllCta: 'See all {{count}} liked articles',

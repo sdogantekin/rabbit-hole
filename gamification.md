@@ -124,8 +124,18 @@ Rules the code enforces:
 ### As built
 
 - `level = 1 + floor(discovery_score / 100)` (`app/(tabs)/profile.tsx`).
-- Linear, uncapped, purely cosmetic. Shown only as "Level N" on the profile header.
-- No level-up moment, no names, nothing unlocks.
+- Linear, uncapped, purely cosmetic. Shown as "Level N" plus a progress bar (D10) on the
+  profile header.
+- **Level-up celebration (D12).** `profiles.last_seen_level` (default 1) tracks the last
+  level the app told the user about. `check_level_up()`, called alongside
+  `evaluate_and_award_badges()` from the same three Edge Functions, compares the current
+  level to it: if higher, updates `last_seen_level` and returns the new level (else returns
+  null). A jump of more than one level in a single action (a big quiz XP award crossing two
+  100-XP boundaries at once) reports only the final level, not every one skipped — celebrating
+  "you're now level 6" is the meaningful moment, not a level-5-then-6 double-fire. Same
+  global-store-plus-one-sheet pattern as badges (`lib/store/level-up-store.ts`,
+  `<LevelUpSheet/>` in `app/_layout.tsx`), so it can fire from Feed, Quiz, or shared-quiz-play
+  without any of them knowing about the others. No names, nothing unlocks — cosmetic only.
 
 ### Open decisions
 
@@ -145,11 +155,7 @@ Rules the code enforces:
 - **D11 — Level names.** Recommendation: not yet. Named tiers ("Wanderer", "Scholar") are
   nice but they collide with the badge names already in use (Rising Scholar, Scholar).
   Decide together with the badge set.
-- **D12 — Level-up celebration.** Needs the app to know the *previous* level to notice a
-  change — `user_badges` (D14, now done) doesn't carry that by itself, but the same
-  pattern applies: a small persisted "last known level" (e.g. a `profiles.last_seen_level`
-  column, updated by the same functions that call `evaluate_and_award_badges()`) is now a
-  same-shaped, one-migration addition.
+- **D12 — Level-up celebration. Done.** See "as built" above.
 
 ---
 
@@ -426,7 +432,7 @@ decided.
 | D9 | Level curve | Linear for launch, thresholds in one constant | XS |
 | D10 | XP progress bar to next level | **Done** | S |
 | D11 | Level names | Not yet | — |
-| D12 | Level-up celebration | Buildable now (same pattern as D14) | S |
+| D12 | Level-up celebration | **Done** | S |
 | D13 | Badges can't be un-earned | **Done** (via D14) | S |
 | D14 | Persist earned badges (`user_badges`) | **Done** | M |
 | D15 | Badge-earned bottom sheet | **Done** | S |
@@ -442,9 +448,10 @@ decided.
 | D25 | Notify owner on play | v2 with push | — |
 
 Suggested order if all recommendations are accepted: ~~D21, D22~~ (done) → ~~D5, D6, D7,
-D10~~ (done) → ~~D14~~ (done, and D13 for free with it) → ~~D15, D16~~ (done) → **D12**
-(same mechanism, still open) → **D2, D3, D4, D18** (tuning, best done once there's some
-usage data).
+D10~~ (done) → ~~D14~~ (done, and D13 for free with it) → ~~D15, D16, D12~~ (done) →
+**D2, D3, D4, D18** (tuning, best done once there's some usage data) — the last real batch
+of open recommendations, alongside the "not for launch"/premium-gated ones (D8, D17, D23,
+D24, D25) and the smaller standalone ones (D1, D11, D19, D20).
 
 ---
 

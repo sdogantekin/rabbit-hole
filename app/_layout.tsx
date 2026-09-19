@@ -21,6 +21,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { SplashScreenMimic } from '@/components/app-shell/SplashScreenMimic';
 import { BadgeEarnedSheet } from '@/components/gamification/BadgeEarnedSheet';
+import { LevelUpSheet } from '@/components/gamification/LevelUpSheet';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/lib/store/auth-store';
 
@@ -90,6 +91,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
           </Stack>
           <BadgeEarnedSheet />
+          <LevelUpSheet />
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

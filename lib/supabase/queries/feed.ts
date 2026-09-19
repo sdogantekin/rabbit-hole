@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase/client';
 import { useBadgeCelebrationStore } from '@/lib/store/badge-celebration-store';
+import { useLevelUpStore } from '@/lib/store/level-up-store';
 import { getLocalTimezone } from '@/lib/timezone';
 
 export interface FeedCard {
@@ -29,12 +30,17 @@ async function fetchNextBatch(batchSize: number): Promise<FeedCard[]> {
   return data?.cards ?? [];
 }
 
-async function submitSwipe(input: SubmitSwipeInput): Promise<{ newlyEarnedBadges: string[] }> {
-  const { data, error } = await supabase.functions.invoke<{ newlyEarnedBadges: string[] }>('score-swipe', {
+async function submitSwipe(
+  input: SubmitSwipeInput,
+): Promise<{ newlyEarnedBadges: string[]; newLevel: number | null }> {
+  const { data, error } = await supabase.functions.invoke<{
+    newlyEarnedBadges: string[];
+    newLevel: number | null;
+  }>('score-swipe', {
     body: { ...input, timezone: getLocalTimezone() },
   });
   if (error) throw error;
-  return { newlyEarnedBadges: data?.newlyEarnedBadges ?? [] };
+  return { newlyEarnedBadges: data?.newlyEarnedBadges ?? [], newLevel: data?.newLevel ?? null };
 }
 
 async function fetchArticleFromCache(pageId: number, lang: string) {
@@ -62,12 +68,14 @@ export function useFetchNextBatchMutation() {
 export function useSubmitSwipeMutation(userId: string | undefined) {
   const queryClient = useQueryClient();
   const announceBadges = useBadgeCelebrationStore((s) => s.announce);
+  const announceLevelUp = useLevelUpStore((s) => s.announce);
   return useMutation({
     mutationFn: (input: SubmitSwipeInput) => submitSwipe(input),
-    onSuccess: ({ newlyEarnedBadges }) => {
+    onSuccess: ({ newlyEarnedBadges, newLevel }) => {
       queryClient.invalidateQueries({ queryKey: ['profile', userId] });
       queryClient.invalidateQueries({ queryKey: ['earned-badges', userId] });
       announceBadges(newlyEarnedBadges);
+      announceLevelUp(newLevel);
     },
   });
 }

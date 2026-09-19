@@ -5,8 +5,9 @@
 // supabase/migrations/20260907160000_quiz_sharing_schema.sql,
 // supabase/migrations/20260909090000_swipe_streak_xp.sql,
 // supabase/migrations/20260918230000_daily_activity_local_day.sql,
-// supabase/migrations/20260919090000_user_badges.sql, and
-// supabase/migrations/20260919120000_new_badges_and_celebration.sql.
+// supabase/migrations/20260919090000_user_badges.sql,
+// supabase/migrations/20260919120000_new_badges_and_celebration.sql, and
+// supabase/migrations/20260919130000_level_up_celebration.sql.
 // Replace with `supabase gen types typescript` output once the schema stabilizes.
 export interface Database {
   public: {
@@ -26,6 +27,7 @@ export interface Database {
           created_at: string;
           analytics_opt_in: boolean;
           leaderboard_opt_in: boolean;
+          last_seen_level: number;
         };
         Insert: Partial<Database['public']['Tables']['profiles']['Row']> & { id: string };
         Update: Partial<Database['public']['Tables']['profiles']['Row']>;
@@ -250,6 +252,10 @@ export interface Database {
       evaluate_and_award_badges: {
         Args: Record<PropertyKey, never>;
         Returns: { awarded_badge_id: string }[];
+      };
+      check_level_up: {
+        Args: Record<PropertyKey, never>;
+        Returns: number | null;
       };
     };
   };

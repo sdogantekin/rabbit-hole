@@ -77,11 +77,16 @@ Deno.serve(async (req: Request) => {
     const { data: newBadges, error: badgesError } = await supabase.rpc('evaluate_and_award_badges');
     if (badgesError) console.error('evaluate_and_award_badges failed:', badgesError.message);
 
+    // D12 (gamification.md §4): null unless this call just crossed into a new level.
+    const { data: newLevel, error: levelError } = await supabase.rpc('check_level_up');
+    if (levelError) console.error('check_level_up failed:', levelError.message);
+
     return Response.json({
       score,
       totalQuestions: questions.length,
       xpAwarded,
       newlyEarnedBadges: (newBadges ?? []).map((b) => b.awarded_badge_id),
+      newLevel: newLevel ?? null,
     });
   } catch (err) {
     return Response.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
