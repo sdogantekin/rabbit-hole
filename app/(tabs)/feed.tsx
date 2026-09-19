@@ -21,6 +21,7 @@ export default function Feed() {
   const session = useAuthStore((s) => s.session);
   const deck = useFeedStore((state) => state.deck);
   const currentIndex = useFeedStore((state) => state.currentIndex);
+  const epoch = useFeedStore((state) => state.epoch);
   const setDeck = useFeedStore((state) => state.setDeck);
   const appendCards = useFeedStore((state) => state.appendCards);
   const advance = useFeedStore((state) => state.advance);
@@ -33,7 +34,12 @@ export default function Feed() {
   const [initialLoadFailed, setInitialLoadFailed] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [isButtonSwipePending, setIsButtonSwipePending] = useState(false);
-  const hasLoadedOnce = useRef(false);
+  // Tracks the last epoch this screen loaded for, not just "have I ever loaded" — an
+  // interest-change refresh bumps the store's epoch and clears the deck, and this needs to
+  // re-trigger an initial load for that specific reason without also re-triggering on every
+  // other empty-deck render (e.g. genuinely caught up), which is what the old plain boolean
+  // guarded against.
+  const lastLoadedEpoch = useRef<number | null>(null);
   const deckRef = useRef<SwipeDeckHandle>(null);
 
   const remainingCards = deck.slice(currentIndex);
@@ -68,16 +74,16 @@ export default function Feed() {
   );
 
   useEffect(() => {
-    if (!hasLoadedOnce.current && deck.length === 0) {
-      hasLoadedOnce.current = true;
+    if (lastLoadedEpoch.current !== epoch && deck.length === 0) {
+      lastLoadedEpoch.current = epoch;
       loadBatch(INITIAL_BATCH_SIZE, true);
     }
-  }, [deck.length, loadBatch]);
+  }, [epoch, deck.length, loadBatch]);
 
   // Prefetch-when-low: keeps swiping from ever waiting on a network call.
   useEffect(() => {
     if (
-      hasLoadedOnce.current &&
+      lastLoadedEpoch.current !== null &&
       !caughtUp &&
       !fetchNextBatch.isPending &&
       remainingCards.length <= PREFETCH_THRESHOLD

@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { BASELINE_WEIGHT, WEIGHT_FLOOR } from '@/constants/interest-categories';
 import { supabase } from '@/lib/supabase/client';
+import { useFeedStore } from '@/lib/store/feed-store';
 
 const USER_INTERESTS_KEY = ['user-interests'] as const;
 
@@ -22,10 +24,14 @@ async function fetchUserInterests(userId: string): Promise<string[]> {
 }
 
 // Reconciles `selected` to exactly match categorySlugs — sets it true for anything newly
-// checked (inserting a baseline weight=1.0 row if none exists yet, or just flipping the flag
-// if a swipe-derived row is already there), and false for anything unchecked. Never deletes
-// a row and never touches `weight` on an existing one: unselecting a category shouldn't wipe
-// weight learned from real swipes, since get-feed's exploration sampling still uses it.
+// checked (inserting a baseline-weight row if none exists yet, or just flipping the flag if
+// a swipe-derived row is already there — that weight is left alone, so real signal from
+// actual swiping is never discarded just because the user also explicitly picked it), and
+// false for anything unchecked. User-reported 2026-09-19: unselecting a category previously
+// had no effect on the feed at all, since get-feed samples by weight regardless of
+// `selected` — this resets weight to the floor on unselect so removing an interest actually
+// suppresses it going forward (still not exactly zero, matching "a category never fully
+// disappears" elsewhere in the weight system). Never deletes a row.
 export async function saveUserInterests(userId: string, categorySlugs: string[]): Promise<void> {
   const { data: existing, error: fetchError } = await supabase
     .from('user_interests')
@@ -43,12 +49,18 @@ export async function saveUserInterests(userId: string, categorySlugs: string[])
     .map(([id]) => id);
 
   if (toInsert.length > 0) {
-    const { error } = await supabase
-      .from('user_interests')
-      .insert(toInsert.map((categoryId) => ({ user_id: userId, category_id: categoryId, selected: true })));
+    const { error } = await supabase.from('user_interests').insert(
+      toInsert.map((categoryId) => ({
+        user_id: userId,
+        category_id: categoryId,
+        selected: true,
+        weight: BASELINE_WEIGHT,
+      })),
+    );
     if (error) throw error;
   }
   if (toSelect.length > 0) {
+    // Weight deliberately untouched here — see the function comment above.
     const { error } = await supabase
       .from('user_interests')
       .update({ selected: true })
@@ -59,7 +71,7 @@ export async function saveUserInterests(userId: string, categorySlugs: string[])
   if (toUnselect.length > 0) {
     const { error } = await supabase
       .from('user_interests')
-      .update({ selected: false })
+      .update({ selected: false, weight: WEIGHT_FLOOR })
       .eq('user_id', userId)
       .in('category_id', toUnselect);
     if (error) throw error;
@@ -81,6 +93,10 @@ export function useSaveInterestsMutation(userId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [...USER_INTERESTS_KEY, userId] });
       queryClient.invalidateQueries({ queryKey: ['user-interest-weights', userId] });
+      // User-reported 2026-09-19: cards already queued locally kept showing regardless of
+      // an interest change, since the deck only grows/gets consumed, never refetched, until
+      // it runs low. Clearing it makes the change felt on the very next card, not eventually.
+      useFeedStore.getState().refreshForInterestChange();
     },
   });
 }

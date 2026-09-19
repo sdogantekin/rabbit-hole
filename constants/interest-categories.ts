@@ -12,6 +12,14 @@ export interface InterestCategory {
 
 export const MIN_INTEREST_SELECTION = 3;
 
+// Shared between the client (lib/supabase/queries/user-interests.ts) and score-swipe —
+// design.md §4's "floor" (a category never fully disappears) and "cap" on interest weight.
+// A fresh category starts at BASELINE_WEIGHT; apply_interest_weight_delta nudges it up/down
+// per swipe within [WEIGHT_FLOOR, WEIGHT_CAP].
+export const WEIGHT_FLOOR = 0.1;
+export const WEIGHT_CAP = 5.0;
+export const BASELINE_WEIGHT = 1.0;
+
 // Curated, not auto-generated from raw Wikipedia categories (see CLAUDE.md).
 // Keep this in sync with supabase/migrations/20260904232051_init_onboarding_schema.sql and
 // supabase/migrations/20260918120000_add_interest_categories.sql.

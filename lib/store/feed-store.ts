@@ -5,10 +5,15 @@ import type { FeedCard } from '@/lib/supabase/queries/feed';
 interface FeedState {
   deck: FeedCard[];
   currentIndex: number;
+  // Bumped only by refreshForInterestChange — feed.tsx's initial-load effect watches this
+  // (instead of just "deck is empty") specifically so it re-fires after an explicit refresh
+  // even though its own "have I ever loaded" ref already says yes.
+  epoch: number;
   setDeck: (cards: FeedCard[]) => void;
   appendCards: (cards: FeedCard[]) => void;
   advance: () => void;
   reset: () => void;
+  refreshForInterestChange: () => void;
 }
 
 // Deck array + index only — no scoring/business logic lives here (that's server-side, see
@@ -17,6 +22,7 @@ interface FeedState {
 export const useFeedStore = create<FeedState>((set) => ({
   deck: [],
   currentIndex: 0,
+  epoch: 0,
   setDeck: (cards) => set({ deck: cards, currentIndex: 0 }),
   appendCards: (cards) =>
     set((state) => {
@@ -26,4 +32,5 @@ export const useFeedStore = create<FeedState>((set) => ({
     }),
   advance: () => set((state) => ({ currentIndex: state.currentIndex + 1 })),
   reset: () => set({ deck: [], currentIndex: 0 }),
+  refreshForInterestChange: () => set((state) => ({ deck: [], currentIndex: 0, epoch: state.epoch + 1 })),
 }));

@@ -1,12 +1,12 @@
+import { WEIGHT_CAP, WEIGHT_FLOOR } from '../../../constants/interest-categories.ts';
 import { createUserScopedClient } from '../_shared/supabase-client.ts';
 
 // design.md §4 leaves these as "small"/"smaller"/"capped"/"floored" without exact values.
 // Like should be felt within a session; skip is roughly 3x weaker so a handful of skips
-// doesn't overcorrect a single like. Floor matches "a category never fully disappears."
+// doesn't overcorrect a single like. Floor/cap now live in constants/interest-categories.ts,
+// shared with the client's saveUserInterests (D-unselect resets weight to that same floor).
 const LIKE_DELTA = 0.15;
 const SKIP_DELTA = -0.05;
-const WEIGHT_FLOOR = 0.1;
-const WEIGHT_CAP = 5.0;
 
 // design.md §6: "small amount per swipe" — deliberately much smaller than
 // QUIZ_XP_PER_CORRECT_ANSWER (constants/quiz.ts) so quiz performance meaningfully outweighs
