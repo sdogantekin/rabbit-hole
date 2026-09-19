@@ -3,6 +3,16 @@ import { createUserScopedClient } from '../_shared/supabase-client.ts';
 import { createLLMProvider, type GeneratedQuizQuestion, type QuizQuestionInput } from '../_shared/llm/provider.ts';
 import { validateGeneratedQuestions } from './validate.ts';
 
+// User-reported: every shared quiz showed the same generic label, so multiple shared
+// quizzes were indistinguishable on the Quiz tab. Deterministic from the article pool's own
+// titles (in liked-order, same as the pool itself) rather than an extra LLM call — cheap,
+// and there's no fact-grounding risk to weigh since it's not answering a question.
+function deriveQuizTitle(articleTitles: string[]): string {
+  if (articleTitles.length <= 1) return articleTitles[0] ?? 'Quiz';
+  if (articleTitles.length === 2) return `${articleTitles[0]} & ${articleTitles[1]}`;
+  return `${articleTitles[0]}, ${articleTitles[1]} & ${articleTitles.length - 2} more`;
+}
+
 async function tryGenerate(
   providerName: string,
   inputs: QuizQuestionInput[],
@@ -118,7 +128,12 @@ Deno.serve(async (req: Request) => {
 
     const { data: session, error: sessionError } = await supabase
       .from('quiz_sessions')
-      .insert({ user_id: user.id, total_questions: questions.length, article_set_key: articleSetKey })
+      .insert({
+        user_id: user.id,
+        total_questions: questions.length,
+        article_set_key: articleSetKey,
+        title: deriveQuizTitle(inputs.map((i) => i.title)),
+      })
       .select('id')
       .single();
     if (sessionError || !session) {

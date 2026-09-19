@@ -7,8 +7,9 @@
 // supabase/migrations/20260918230000_daily_activity_local_day.sql,
 // supabase/migrations/20260919090000_user_badges.sql,
 // supabase/migrations/20260919120000_new_badges_and_celebration.sql,
-// supabase/migrations/20260919130000_level_up_celebration.sql, and
-// supabase/migrations/20260919140000_user_interests_selected_flag.sql.
+// supabase/migrations/20260919130000_level_up_celebration.sql,
+// supabase/migrations/20260919140000_user_interests_selected_flag.sql, and
+// supabase/migrations/20260919150000_quiz_session_title.sql.
 // Replace with `supabase gen types typescript` output once the schema stabilizes.
 export interface Database {
   public: {
@@ -129,6 +130,7 @@ export interface Database {
           score: number;
           total_questions: number;
           article_set_key: string;
+          title: string | null;
         };
         Insert: {
           user_id: string;
@@ -136,6 +138,7 @@ export interface Database {
           article_set_key: string;
           score?: number;
           completed_at?: string | null;
+          title?: string | null;
         };
         Update: Partial<Database['public']['Tables']['quiz_sessions']['Row']>;
         Relationships: [];

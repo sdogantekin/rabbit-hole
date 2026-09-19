@@ -24,19 +24,23 @@ Deno.serve(async (req: Request) => {
       return Response.json({ error: 'shared quiz not found' }, { status: 404 });
     }
 
-    const [{ data: questions, error: questionsError }, { data: existingPlay }, { data: ownerNames }] = await Promise.all([
-      supabase
-        .from('quiz_questions')
-        .select('id, question_text, options, correct_option_index, question_order')
-        .eq('quiz_session_id', sharedQuiz.source_quiz_session_id),
-      supabase
-        .from('quiz_plays')
-        .select('score, total_questions')
-        .eq('shared_quiz_id', sharedQuiz.id)
-        .eq('player_user_id', user.id)
-        .maybeSingle(),
-      supabase.rpc('get_leaderboard_display_names', { p_user_ids: [sharedQuiz.owner_user_id] }),
-    ]);
+    const [{ data: questions, error: questionsError }, { data: existingPlay }, { data: ownerNames }, { data: session }] =
+      await Promise.all([
+        supabase
+          .from('quiz_questions')
+          .select('id, question_text, options, correct_option_index, question_order')
+          .eq('quiz_session_id', sharedQuiz.source_quiz_session_id),
+        supabase
+          .from('quiz_plays')
+          .select('score, total_questions')
+          .eq('shared_quiz_id', sharedQuiz.id)
+          .eq('player_user_id', user.id)
+          .maybeSingle(),
+        supabase.rpc('get_leaderboard_display_names', { p_user_ids: [sharedQuiz.owner_user_id] }),
+        // Requires the "readable once shared" policy (20260919150000) — the recipient isn't
+        // the session's owner, so the plain owner-only policy alone would return no row here.
+        supabase.from('quiz_sessions').select('title').eq('id', sharedQuiz.source_quiz_session_id).maybeSingle(),
+      ]);
     if (questionsError || !questions) {
       return Response.json({ error: questionsError?.message ?? 'quiz questions not found' }, { status: 500 });
     }
@@ -47,6 +51,7 @@ Deno.serve(async (req: Request) => {
       sharedQuizId: sharedQuiz.id,
       isOwner: sharedQuiz.owner_user_id === user.id,
       ownerDisplayName: ownerNames?.[0]?.display_name ?? null,
+      quizTitle: session?.title ?? null,
       alreadyPlayed: !!existingPlay,
       yourResult: existingPlay ? { score: existingPlay.score, totalQuestions: existingPlay.total_questions } : null,
       questions: ordered.map((q) => ({

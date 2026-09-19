@@ -11,6 +11,7 @@ export interface SharedQuizView {
   sharedQuizId: string;
   isOwner: boolean;
   ownerDisplayName: string | null;
+  quizTitle: string | null;
   alreadyPlayed: boolean;
   yourResult: { score: number; totalQuestions: number } | null;
   questions: QuizQuestion[];
@@ -127,6 +128,7 @@ export function useLeaderboardQuery(sharedQuizId: string | undefined, currentUse
 
 export interface MySharedQuiz {
   sharedQuizId: string;
+  title: string | null;
   playCount: number;
   createdAt: string;
 }
@@ -136,28 +138,40 @@ export interface MySharedQuiz {
 async function fetchMySharedQuizzes(userId: string): Promise<MySharedQuiz[]> {
   const { data: shares, error: sharesError } = await supabase
     .from('shared_quizzes')
-    .select('id, created_at')
+    .select('id, source_quiz_session_id, created_at')
     .eq('owner_user_id', userId)
     .order('created_at', { ascending: false });
   if (sharesError) throw sharesError;
   if (!shares || shares.length === 0) return [];
 
-  const { data: plays, error: playsError } = await supabase
-    .from('quiz_plays')
-    .select('shared_quiz_id')
-    .in(
-      'shared_quiz_id',
-      shares.map((s) => s.id),
-    );
+  const [{ data: plays, error: playsError }, { data: sessions, error: sessionsError }] = await Promise.all([
+    supabase
+      .from('quiz_plays')
+      .select('shared_quiz_id')
+      .in(
+        'shared_quiz_id',
+        shares.map((s) => s.id),
+      ),
+    supabase
+      .from('quiz_sessions')
+      .select('id, title')
+      .in(
+        'id',
+        shares.map((s) => s.source_quiz_session_id),
+      ),
+  ]);
   if (playsError) throw playsError;
+  if (sessionsError) throw sessionsError;
 
   const countBySharedQuizId = new Map<string, number>();
   for (const play of plays ?? []) {
     countBySharedQuizId.set(play.shared_quiz_id, (countBySharedQuizId.get(play.shared_quiz_id) ?? 0) + 1);
   }
+  const titleBySessionId = new Map((sessions ?? []).map((s) => [s.id, s.title]));
 
   return shares.map((s) => ({
     sharedQuizId: s.id,
+    title: titleBySessionId.get(s.source_quiz_session_id) ?? null,
     playCount: countBySharedQuizId.get(s.id) ?? 1,
     createdAt: s.created_at,
   }));
@@ -174,6 +188,7 @@ export function useMySharedQuizzesQuery(userId: string | undefined) {
 export interface PlayedSharedQuiz {
   sharedQuizId: string;
   ownerDisplayName: string | null;
+  title: string | null;
   score: number;
   totalQuestions: number;
 }
@@ -190,7 +205,7 @@ async function fetchPlayedSharedQuizzes(userId: string): Promise<PlayedSharedQui
 
   const { data: shares, error: sharesError } = await supabase
     .from('shared_quizzes')
-    .select('id, owner_user_id')
+    .select('id, owner_user_id, source_quiz_session_id')
     .in(
       'id',
       plays.map((p) => p.shared_quiz_id),
@@ -199,12 +214,22 @@ async function fetchPlayedSharedQuizzes(userId: string): Promise<PlayedSharedQui
   if (sharesError) throw sharesError;
   if (!shares || shares.length === 0) return [];
 
-  const ownerIds = [...new Set(shares.map((s) => s.owner_user_id))];
-  const { data: names, error: namesError } = await supabase.rpc('get_leaderboard_display_names', {
-    p_user_ids: ownerIds,
-  });
+  const [{ data: names, error: namesError }, { data: sessions, error: sessionsError }] = await Promise.all([
+    supabase.rpc('get_leaderboard_display_names', { p_user_ids: [...new Set(shares.map((s) => s.owner_user_id))] }),
+    // Requires the "readable once shared" policy (20260919150000) — these sessions belong
+    // to other users, so the plain owner-only policy alone would return no rows here.
+    supabase
+      .from('quiz_sessions')
+      .select('id, title')
+      .in(
+        'id',
+        shares.map((s) => s.source_quiz_session_id),
+      ),
+  ]);
   if (namesError) throw namesError;
+  if (sessionsError) throw sessionsError;
   const nameByUserId = new Map((names ?? []).map((n) => [n.id, n.display_name]));
+  const titleBySessionId = new Map((sessions ?? []).map((s) => [s.id, s.title]));
 
   const shareById = new Map(shares.map((s) => [s.id, s]));
   return plays
@@ -214,6 +239,7 @@ async function fetchPlayedSharedQuizzes(userId: string): Promise<PlayedSharedQui
       return {
         sharedQuizId: p.shared_quiz_id,
         ownerDisplayName: nameByUserId.get(share.owner_user_id) ?? null,
+        title: titleBySessionId.get(share.source_quiz_session_id) ?? null,
         score: p.score,
         totalQuestions: p.total_questions,
       };

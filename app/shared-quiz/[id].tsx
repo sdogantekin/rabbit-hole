@@ -73,9 +73,16 @@ export default function SharedQuiz() {
     );
   };
 
-  const title = data?.ownerDisplayName
-    ? t('quiz.ownerQuizTitle', { name: data.ownerDisplayName })
-    : t('quiz.anonymousOwnerTitle');
+  const title =
+    data?.quizTitle ??
+    (data?.ownerDisplayName ? t('quiz.ownerQuizTitle', { name: data.ownerDisplayName }) : t('quiz.anonymousOwnerTitle'));
+  // Only shown alongside a real derived title — the two fallback titles above already say
+  // whose quiz it is, so repeating that would be redundant.
+  const fromLabel = data?.quizTitle
+    ? data.ownerDisplayName
+      ? t('quiz.fromLabel', { name: data.ownerDisplayName })
+      : t('quiz.fromAnonymousLabel')
+    : null;
 
   const isPlaying = mode === 'shared' && sharedQuizId === id && stage !== 'home';
 
@@ -96,6 +103,7 @@ export default function SharedQuiz() {
           ) : (
             <View style={styles.card}>
               <Text style={styles.title}>{title}</Text>
+              {fromLabel ? <Text style={styles.fromLabel}>{fromLabel}</Text> : null}
               {data.alreadyPlayed && data.yourResult ? (
                 <>
                   <Text style={styles.body}>
@@ -178,6 +186,7 @@ const styles = {
     shadowOffset: { width: 0, height: 2 },
   },
   title: { fontFamily: fonts.serif, fontSize: 20, color: colors.ink },
+  fromLabel: { fontFamily: fonts.sans, fontSize: 12.5, color: colors.inkMuted, marginTop: -8 },
   body: { fontFamily: fonts.sans, fontSize: 13.5, lineHeight: 19, color: colors.inkSecondary },
   button: { padding: 14, borderRadius: 14, alignItems: 'center' as const },
   buttonText: { fontFamily: fonts.sansSemiBold, fontSize: 15, color: '#fff' },

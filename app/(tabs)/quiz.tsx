@@ -119,19 +119,24 @@ export default function Quiz() {
             <View>
               <Text style={styles.sectionTitle}>{t('quiz.yourSharedQuizzesTitle')}</Text>
               <View style={{ gap: 8 }}>
-                {mySharedQuizzes.map((sq) => (
-                  <Pressable
-                    key={sq.sharedQuizId}
-                    onPress={() => setLeaderboardTarget({ sharedQuizId: sq.sharedQuizId, title: t('quiz.ownQuizTitle') })}
-                    style={styles.listRow}
-                  >
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.listRowTitle}>{t('quiz.ownQuizTitle')}</Text>
-                      <Text style={styles.listRowSubtitle}>{t('quiz.playsCountLabel', { count: sq.playCount })}</Text>
-                    </View>
-                    <Text style={styles.listRowCta}>{t('quiz.leaderboardCta')}</Text>
-                  </Pressable>
-                ))}
+                {mySharedQuizzes.map((sq) => {
+                  const title = sq.title ?? t('quiz.ownQuizTitle');
+                  return (
+                    <Pressable
+                      key={sq.sharedQuizId}
+                      onPress={() => setLeaderboardTarget({ sharedQuizId: sq.sharedQuizId, title })}
+                      style={styles.listRow}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.listRowTitle} numberOfLines={1}>
+                          {title}
+                        </Text>
+                        <Text style={styles.listRowSubtitle}>{t('quiz.playsCountLabel', { count: sq.playCount })}</Text>
+                      </View>
+                      <Text style={styles.listRowCta}>{t('quiz.leaderboardCta')}</Text>
+                    </Pressable>
+                  );
+                })}
               </View>
             </View>
           ) : null}
@@ -141,9 +146,11 @@ export default function Quiz() {
               <Text style={styles.sectionTitle}>{t('quiz.playedTitle')}</Text>
               <View style={{ gap: 8 }}>
                 {playedSharedQuizzes.map((pq) => {
-                  const title = pq.ownerDisplayName
-                    ? t('quiz.ownerQuizTitle', { name: pq.ownerDisplayName })
-                    : t('quiz.anonymousOwnerTitle');
+                  const title =
+                    pq.title ??
+                    (pq.ownerDisplayName
+                      ? t('quiz.ownerQuizTitle', { name: pq.ownerDisplayName })
+                      : t('quiz.anonymousOwnerTitle'));
                   const fromLabel = pq.ownerDisplayName
                     ? t('quiz.fromLabel', { name: pq.ownerDisplayName })
                     : t('quiz.fromAnonymousLabel');
@@ -154,7 +161,9 @@ export default function Quiz() {
                       style={styles.listRow}
                     >
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.listRowTitle}>{title}</Text>
+                        <Text style={styles.listRowTitle} numberOfLines={1}>
+                          {title}
+                        </Text>
                         <Text style={styles.listRowSubtitle}>
                           {fromLabel} — {t('quiz.scoredLabel', { score: pq.score, total: pq.totalQuestions })}
                         </Text>
