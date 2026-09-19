@@ -1,7 +1,9 @@
 // Wikimedia etiquette requires a descriptive User-Agent identifying the app + a contact
-// method (design.md §3). No real contact exists yet — replace before shipping.
-// TODO: replace with a real contact email/URL before production.
-const USER_AGENT = 'RabbitHole/0.1 (contact: TODO@example.com) wiki-proxy edge function';
+// method (design.md §3) — the same address already published as this app's contact in
+// docs/privacy-policy.html, not a personal address, since Wikimedia wants a way to reach
+// whoever operates the tool.
+const USER_AGENT =
+  'RabbitHole/1.0 (contact: info@serkandogantekin.com; https://sdogantekin.github.io/rabbit-hole/privacy-policy.html) wiki-proxy edge function';
 
 const ACTION_API = 'https://en.wikipedia.org/w/api.php';
 // design.md names api.wikimedia.org's core v1 API, but that gateway has no "summary"
