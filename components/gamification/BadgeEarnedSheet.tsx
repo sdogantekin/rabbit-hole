@@ -1,4 +1,5 @@
 import { Image, Modal, Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BADGE_ICONS } from '@/constants/badge-icons';
 import { Ionicons } from '@/constants/icons';
@@ -12,6 +13,7 @@ import { useBadgeCelebrationStore } from '@/lib/store/badge-celebration-store';
 // badge-celebration store so it can pop up after a swipe, a quiz, or a shared-quiz play
 // without any of those screens knowing about each other.
 export function BadgeEarnedSheet() {
+  const insets = useSafeAreaInsets();
   const pendingBadgeIds = useBadgeCelebrationStore((s) => s.pendingBadgeIds);
   const dismiss = useBadgeCelebrationStore((s) => s.dismiss);
 
@@ -22,7 +24,12 @@ export function BadgeEarnedSheet() {
   return (
     <Modal visible={badges.length > 0} transparent animationType="slide" onRequestClose={dismiss}>
       <Pressable style={styles.backdrop} onPress={dismiss}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+        {/* On 3-button Android navigation the system bar isn't part of the OS-reserved
+            layout space RN sees by default, so without this the "Nice" button rendered
+            behind it, unreachable. */}
+        <Pressable
+          style={[styles.sheet, { paddingBottom: styles.sheet.paddingBottom + insets.bottom }]}
+          onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
           <Text style={styles.title}>{t('profile.badgeEarned.title')}</Text>
 

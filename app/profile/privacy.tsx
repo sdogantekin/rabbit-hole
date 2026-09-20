@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Modal, Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, fonts } from '@/constants/theme';
 import { t } from '@/lib/localization';
@@ -10,6 +11,7 @@ import { useDeleteAccountMutation, useProfileQuery, useUpdateProfileMutation } f
 
 export default function Privacy() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const session = useAuthStore((s) => s.session);
   const userId = session?.user.id;
   const { data: profile } = useProfileQuery(userId);
@@ -77,7 +79,12 @@ export default function Privacy() {
 
       <Modal visible={confirmOpen} transparent animationType="slide" onRequestClose={() => setConfirmOpen(false)}>
         <Pressable style={styles.backdrop} onPress={() => setConfirmOpen(false)}>
-          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+          {/* On 3-button Android navigation the system bar isn't part of the OS-reserved
+              layout space RN sees by default, so without this the confirm buttons rendered
+              behind it, unreachable. */}
+          <Pressable
+            style={[styles.sheet, { paddingBottom: styles.sheet.paddingBottom + insets.bottom }]}
+            onPress={(e) => e.stopPropagation()}>
             <View style={styles.handle} />
             <Text style={styles.confirmTitle}>{t('privacy.deleteAccountConfirmTitle')}</Text>
             <Text style={styles.confirmBody}>{t('privacy.deleteAccountConfirmBody')}</Text>

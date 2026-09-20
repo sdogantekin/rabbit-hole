@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SavedArticleRow } from '@/components/profile/SavedArticleRow';
 import { BADGE_ICONS } from '@/constants/badge-icons';
@@ -40,6 +41,7 @@ const XP_PER_LEVEL = 100;
 
 export default function Profile() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const session = useAuthStore((s) => s.session);
   const resetOnboarding = useOnboardingStore((s) => s.reset);
   const userId = session?.user.id;
@@ -276,7 +278,12 @@ export default function Profile() {
 
       <Modal visible={pickerOpen} transparent animationType="slide" onRequestClose={() => setPickerOpen(false)}>
         <Pressable style={styles.sheetBackdrop} onPress={() => setPickerOpen(false)}>
-          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+          {/* On 3-button Android navigation the system bar isn't part of the OS-reserved
+              layout space RN sees by default, so without this the Cancel button rendered
+              behind it, unreachable. */}
+          <Pressable
+            style={[styles.sheet, { paddingBottom: styles.sheet.paddingBottom + insets.bottom }]}
+            onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>{t('profile.avatar.title')}</Text>
             <Pressable onPress={() => pickImage('camera')} style={styles.sheetButton}>
@@ -300,7 +307,12 @@ export default function Profile() {
       >
         <Pressable style={styles.sheetBackdrop} onPress={() => setNameEditorOpen(false)}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-            <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+            {/* On 3-button Android navigation the system bar isn't part of the OS-reserved
+                layout space RN sees by default, so without this the Save/Cancel buttons
+                rendered behind it, unreachable. */}
+            <Pressable
+              style={[styles.sheet, { paddingBottom: styles.sheet.paddingBottom + insets.bottom }]}
+              onPress={(e) => e.stopPropagation()}>
               <View style={styles.sheetHandle} />
               <Text style={styles.sheetTitle}>{t('profile.editName.title')}</Text>
               <Text style={styles.nameEditorBody}>{t('profile.editName.body')}</Text>

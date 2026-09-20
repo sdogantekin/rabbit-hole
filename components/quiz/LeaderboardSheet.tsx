@@ -1,4 +1,5 @@
 import { Modal, Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, fonts } from '@/constants/theme';
 import { t } from '@/lib/localization';
@@ -13,12 +14,18 @@ interface LeaderboardSheetProps {
 }
 
 export function LeaderboardSheet({ visible, sharedQuizId, currentUserId, title, onClose }: LeaderboardSheetProps) {
+  const insets = useSafeAreaInsets();
   const { data: rows = [], isLoading } = useLeaderboardQuery(visible ? sharedQuizId : undefined, currentUserId);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+        {/* On 3-button Android navigation the system bar isn't part of the OS-reserved
+            layout space RN sees by default, so without this the close button rendered
+            behind it, unreachable. */}
+        <Pressable
+          style={[styles.sheet, { paddingBottom: styles.sheet.paddingBottom + insets.bottom }]}
+          onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
           <Text style={styles.title} numberOfLines={2}>
             {title}
