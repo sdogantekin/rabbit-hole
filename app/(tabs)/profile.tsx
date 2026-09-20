@@ -1,7 +1,17 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import {
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 import { SavedArticleRow } from '@/components/profile/SavedArticleRow';
 import { BADGE_ICONS } from '@/constants/badge-icons';
@@ -289,32 +299,34 @@ export default function Profile() {
         onRequestClose={() => setNameEditorOpen(false)}
       >
         <Pressable style={styles.sheetBackdrop} onPress={() => setNameEditorOpen(false)}>
-          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>{t('profile.editName.title')}</Text>
-            <Text style={styles.nameEditorBody}>{t('profile.editName.body')}</Text>
-            <TextInput
-              value={nameDraft}
-              onChangeText={(text) => {
-                setNameDraft(text);
-                setNameError(null);
-              }}
-              placeholder={t('profile.editName.placeholder')}
-              placeholderTextColor={colors.inkFaint}
-              maxLength={DISPLAY_NAME_MAX_LENGTH}
-              autoFocus
-              style={styles.nameInput}
-            />
-            {nameError ? <Text style={styles.nameErrorText}>{nameError}</Text> : null}
-            <Pressable onPress={saveName} style={[styles.sheetButton, styles.sheetButtonPrimary]}>
-              <Text style={[styles.sheetButtonText, styles.sheetButtonTextPrimary]}>
-                {t('profile.editName.saveCta')}
-              </Text>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+              <View style={styles.sheetHandle} />
+              <Text style={styles.sheetTitle}>{t('profile.editName.title')}</Text>
+              <Text style={styles.nameEditorBody}>{t('profile.editName.body')}</Text>
+              <TextInput
+                value={nameDraft}
+                onChangeText={(text) => {
+                  setNameDraft(text);
+                  setNameError(null);
+                }}
+                placeholder={t('profile.editName.placeholder')}
+                placeholderTextColor={colors.inkFaint}
+                maxLength={DISPLAY_NAME_MAX_LENGTH}
+                autoFocus
+                style={styles.nameInput}
+              />
+              {nameError ? <Text style={styles.nameErrorText}>{nameError}</Text> : null}
+              <Pressable onPress={saveName} style={[styles.sheetButton, styles.sheetButtonPrimary]}>
+                <Text style={[styles.sheetButtonText, styles.sheetButtonTextPrimary]}>
+                  {t('profile.editName.saveCta')}
+                </Text>
+              </Pressable>
+              <Pressable onPress={() => setNameEditorOpen(false)} style={styles.sheetButton}>
+                <Text style={styles.sheetButtonText}>{t('profile.editName.cancelCta')}</Text>
+              </Pressable>
             </Pressable>
-            <Pressable onPress={() => setNameEditorOpen(false)} style={styles.sheetButton}>
-              <Text style={styles.sheetButtonText}>{t('profile.editName.cancelCta')}</Text>
-            </Pressable>
-          </Pressable>
+          </KeyboardAvoidingView>
         </Pressable>
       </Modal>
     </ScrollView>

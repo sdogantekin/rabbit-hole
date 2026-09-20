@@ -32,6 +32,7 @@ export default function Feed() {
 
   const [caughtUp, setCaughtUp] = useState(false);
   const [initialLoadFailed, setInitialLoadFailed] = useState(false);
+  const [refillFailed, setRefillFailed] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [isButtonSwipePending, setIsButtonSwipePending] = useState(false);
   // Tracks the last epoch this screen loaded for, not just "have I ever loaded" — an
@@ -64,9 +65,12 @@ export default function Feed() {
             setCaughtUp(afterCount === beforeCount);
           }
           setInitialLoadFailed(false);
+          setRefillFailed(false);
         },
-        onError: () => {
+        onError: (err) => {
+          console.error('[feed] loadBatch failed', isInitial ? 'initial' : 'refill', err);
           if (isInitial) setInitialLoadFailed(true);
+          else setRefillFailed(true);
         },
       });
     },
@@ -80,17 +84,20 @@ export default function Feed() {
     }
   }, [epoch, deck.length, loadBatch]);
 
-  // Prefetch-when-low: keeps swiping from ever waiting on a network call.
+  // Prefetch-when-low: keeps swiping from ever waiting on a network call. Stops retrying on
+  // refillFailed instead of hammering the same failing request forever — the empty-deck view
+  // below surfaces a manual retry once that happens.
   useEffect(() => {
     if (
       lastLoadedEpoch.current !== null &&
       !caughtUp &&
+      !refillFailed &&
       !fetchNextBatch.isPending &&
       remainingCards.length <= PREFETCH_THRESHOLD
     ) {
       loadBatch(REFILL_BATCH_SIZE);
     }
-  }, [remainingCards.length, caughtUp, fetchNextBatch.isPending, loadBatch]);
+  }, [remainingCards.length, caughtUp, refillFailed, fetchNextBatch.isPending, loadBatch]);
 
   const handleSwipe = (card: FeedCard, direction: 'like' | 'skip') => {
     // Fire-and-continue: the deck advances immediately regardless of network speed
@@ -137,11 +144,21 @@ export default function Feed() {
       <View style={{ flex: 1, backgroundColor: colors.appBackground, padding: 20 }}>
         <View style={styles.emptyCard}>
           <Text style={{ fontFamily: fonts.serif, fontSize: 19, color: colors.ink, marginBottom: 8 }}>
-            {caughtUp ? t('feed.caughtUp') : t('feed.refilling')}
+            {caughtUp ? t('feed.caughtUp') : refillFailed ? t('feed.loadError') : t('feed.refilling')}
           </Text>
           {caughtUp ? (
             <Pressable onPress={() => loadBatch(REFILL_BATCH_SIZE)} style={[styles.darkButton, { marginTop: 12 }]}>
               <Text style={styles.darkButtonText}>{t('feed.checkAgainCta')}</Text>
+            </Pressable>
+          ) : refillFailed ? (
+            <Pressable
+              onPress={() => {
+                setRefillFailed(false);
+                loadBatch(REFILL_BATCH_SIZE);
+              }}
+              style={[styles.darkButton, { marginTop: 12 }]}
+            >
+              <Text style={styles.darkButtonText}>{t('feed.retryCta')}</Text>
             </Pressable>
           ) : null}
         </View>

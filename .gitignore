@@ -14,6 +14,9 @@ expo-env.d.ts
 /ios
 /android
 
+# Local build outputs (produced by `eas build --local`)
+/build-artifacts
+
 # Native credentials — never commit these
 *.jks
 *.p8
