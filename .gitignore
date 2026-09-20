@@ -25,6 +25,10 @@ expo-env.d.ts
 *.mobileprovision
 credentials.json
 
+# Firebase app config (references from `firebase apps:sdkconfig`, local-only per convention)
+GoogleService-Info.plist
+google-services.json
+
 # Environment files
 .env
 .env.local

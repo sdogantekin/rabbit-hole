@@ -18,7 +18,7 @@ RabbitHole is a mobile app that turns Wikipedia into a Tinder-style swipe deck: 
 - **Content source:** Wikimedia REST API, called only from a Supabase Edge Function (never directly from the client)
 - **AI:** Provider-agnostic LLM layer for quiz generation, called from Edge Functions only. Defaults to Claude (Haiku tier) but built behind an adapter interface so it can switch to an OpenAI-compatible provider (Qwen, DeepSeek, etc.) via a config flag for cost/performance optimization once there's real usage data
 - **Sharing:** `react-native-view-shot` to render a card as an image + `expo-sharing` for the native share sheet
-- **Analytics:** privacy-minimal, EU-hosted (decide provider before v1 ships — see open questions in requirements.md)
+- **Analytics:** Google Analytics (Firebase) — a knowing exception to "EU-hosted", opted into with mitigations; see requirements.md §10 for the tradeoff and what was done to limit it
 
 ## Repo structure (proposed)
 

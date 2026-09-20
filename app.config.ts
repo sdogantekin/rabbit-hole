@@ -19,9 +19,11 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: 'com.sdogantekin.rabbithole',
     supportsTablet: true,
+    googleServicesFile: './GoogleService-Info.plist',
   },
   android: {
     package: 'com.sdogantekin.rabbithole',
+    googleServicesFile: './google-services.json',
     adaptiveIcon: {
       // Sampled directly from the icon artwork's own background (icons/appstore.png) rather
       // than picked separately, so the two match exactly. No backgroundImage/monochromeImage:
@@ -92,6 +94,9 @@ const config: ExpoConfig = {
       },
     ],
     '@react-native-google-signin/google-signin',
+    '@react-native-firebase/app',
+    '@react-native-firebase/analytics',
+    './plugins/withAnalyticsCollectionDisabledByDefault',
   ],
 };
 

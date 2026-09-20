@@ -98,7 +98,16 @@ Directly comparable apps already exist: **WikiTok**, **WikiUp**, and **WikiScrol
 
 ## 10. Open questions (need a decision before or during v1 build)
 
-- Analytics provider: needs to be one with an EU data residency option
+- ~~Analytics provider~~ **Decided 2026-09-20: Google Analytics (Firebase).** Knowingly
+  overrides the EU-data-residency preference stated above — several EU DPAs (Austria, France,
+  Italy) have ruled standard GA setups don't fully satisfy GDPR due to US data transfer.
+  Mitigations taken: dedicated GA account (not bundled with other projects), account region
+  set to Germany, all optional data-sharing toggles (Google products/services, benchmarking,
+  technical support, account specialists) turned off, and native collection defaults to
+  **disabled** until the user's `analytics_opt_in` preference is read (see
+  `app.config.ts`'s `withAnalyticsCollectionDisabledByDefault` plugin and
+  `lib/analytics`/`components/app-shell/AnalyticsConsentSync.tsx`). No event instrumentation
+  beyond SDK setup has shipped yet — that's separate follow-up work.
 - Exact free-tier swipe/quiz limits for the eventual premium tier
 - Whether Google/Apple sign-in or email-first is the v1 default
 - Success metric baselines (can't be set until there's usage data; don't publish a target number before then)

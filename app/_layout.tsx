@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AnalyticsConsentSync } from '@/components/app-shell/AnalyticsConsentSync';
 import { SplashScreenMimic } from '@/components/app-shell/SplashScreenMimic';
 import { BadgeEarnedSheet } from '@/components/gamification/BadgeEarnedSheet';
 import { LevelUpSheet } from '@/components/gamification/LevelUpSheet';
@@ -92,6 +93,7 @@ export default function RootLayout() {
           </Stack>
           <BadgeEarnedSheet />
           <LevelUpSheet />
+          <AnalyticsConsentSync />
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
